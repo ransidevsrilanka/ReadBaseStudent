@@ -23,16 +23,33 @@ export const aiService = {
   },
 
   async sendMessage(message: string, enrollmentId: string) {
+    console.log('aiService - Sending message:', { message, enrollmentId });
+    
     const { data, error } = await supabase.functions.invoke('ai-chat', {
       body: { message, enrollmentId },
     });
     
-    if (error) throw error;
-    return data as {
-      reply: string;
-      creditsUsed: number;
-      creditsRemaining: number;
-    };
+    console.log('aiService - Response data:', data);
+    console.log('aiService - Response error:', error);
+    
+    if (error) {
+      console.error('aiService - Error details:', JSON.stringify(error, null, 2));
+      throw error;
+    }
+    
+    // Handle different response formats
+    if (data && typeof data === 'object') {
+      // If the response is wrapped in a data property
+      const responseData = data.data || data;
+      
+      return {
+        reply: responseData.reply || responseData.message || 'No response from AI',
+        creditsUsed: responseData.creditsUsed || 0,
+        creditsRemaining: responseData.creditsRemaining || 0,
+      };
+    }
+    
+    throw new Error('Invalid response format from AI service');
   },
 
   async getChatHistory(userId: string) {

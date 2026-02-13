@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Screen } from '@/components/layout/Screen';
 import { SubjectCard } from '@/components/feature/SubjectCard';
 import { TierBadge } from '@/components/ui/TierBadge';
@@ -57,11 +58,12 @@ export default function DashboardScreen() {
           </View>
         ) : subjects.length === 0 ? (
           <View style={styles.emptyState}>
+            <MaterialIcons name="school" size={64} color={colors.textTertiary} />
             <Text style={styles.emptyText}>No subjects found</Text>
             <Text style={styles.emptySubtext}>
               {userSubjects 
-                ? `Subject IDs: ${subjectIds.join(', ')}`
-                : 'No user subjects data'}
+                ? `Your subject IDs: ${subjectIds.filter(Boolean).join(', ')}\n\nPlease contact support if you believe this is an error.`
+                : 'No user subjects data available. Please complete your enrollment.'}
             </Text>
           </View>
         ) : (

@@ -25,15 +25,23 @@ export function useSubjects(subjectIds: string[]) {
         
         console.log('useSubjects - Fetching subjects for IDs:', subjectIds);
         
-        const subjectPromises = subjectIds.map((id) => {
+        const subjectPromises = subjectIds.map(async (id) => {
           console.log('useSubjects - Fetching subject:', id);
-          return contentService.getSubjectById(id);
+          try {
+            return await contentService.getSubjectById(id);
+          } catch (err) {
+            console.error('useSubjects - Error fetching subject', id, ':', err);
+            return null;
+          }
         });
         
         const subjectsData = await Promise.all(subjectPromises);
-        console.log('useSubjects - Subjects data:', subjectsData);
+        console.log('useSubjects - Raw subjects data:', subjectsData);
         
-        setSubjects(subjectsData.filter(Boolean));
+        const validSubjects = subjectsData.filter(Boolean);
+        console.log('useSubjects - Valid subjects:', validSubjects);
+        
+        setSubjects(validSubjects);
       } catch (err) {
         console.error('Error fetching subjects:', err);
         console.error('Error details:', JSON.stringify(err, null, 2));

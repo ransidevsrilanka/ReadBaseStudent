@@ -8,14 +8,19 @@ const { supabase } = supabaseModule;
 
 export const contentService = {
   async getSubjectById(subjectId: string) {
+    console.log('contentService - Fetching subject by ID:', subjectId);
+    
     const { data, error } = await supabase
       .from('subjects')
       .select('*')
       .eq('id', subjectId)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
     
-    if (error) throw error;
+    console.log('contentService - Subject data:', data);
+    console.log('contentService - Subject error:', error);
+    
+    if (error && error.code !== 'PGRST116') throw error;
     return data;
   },
 
