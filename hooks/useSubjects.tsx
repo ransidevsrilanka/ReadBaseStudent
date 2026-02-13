@@ -11,7 +11,10 @@ export function useSubjects(subjectIds: string[]) {
 
   useEffect(() => {
     const fetchSubjects = async () => {
+      console.log('useSubjects - Subject IDs:', subjectIds);
+      
       if (!subjectIds || subjectIds.length === 0) {
+        console.log('useSubjects - No subject IDs, skipping fetch');
         setLoading(false);
         return;
       }
@@ -20,14 +23,20 @@ export function useSubjects(subjectIds: string[]) {
         setLoading(true);
         setError(null);
         
-        const subjectPromises = subjectIds.map((id) =>
-          contentService.getSubjectById(id)
-        );
+        console.log('useSubjects - Fetching subjects for IDs:', subjectIds);
+        
+        const subjectPromises = subjectIds.map((id) => {
+          console.log('useSubjects - Fetching subject:', id);
+          return contentService.getSubjectById(id);
+        });
         
         const subjectsData = await Promise.all(subjectPromises);
+        console.log('useSubjects - Subjects data:', subjectsData);
+        
         setSubjects(subjectsData.filter(Boolean));
       } catch (err) {
         console.error('Error fetching subjects:', err);
+        console.error('Error details:', JSON.stringify(err, null, 2));
         setError('Failed to load subjects');
       } finally {
         setLoading(false);

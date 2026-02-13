@@ -73,10 +73,14 @@ export type Database = {
     subject_1_code: string;
     subject_2_code: string;
     subject_3_code: string;
+    subject_1_name: string;
+    subject_2_name: string;
+    subject_3_name: string;
     subject_1_medium: string | null;
     subject_2_medium: string | null;
     subject_3_medium: string | null;
     is_locked: boolean;
+    medium_change_count: number;
   };
   ai_credits: {
     id: string;

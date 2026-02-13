@@ -24,10 +24,15 @@ export function useAuth() {
 
   const fetchUserData = async (currentUser: User) => {
     try {
+      console.log('useAuth - Fetching data for user:', currentUser.id);
+      
       const [enrollmentData, profileData] = await Promise.all([
         enrollmentService.getUserEnrollment(currentUser.id),
         enrollmentService.getUserProfile(currentUser.id),
       ]);
+
+      console.log('useAuth - Enrollment:', enrollmentData);
+      console.log('useAuth - Profile:', profileData);
 
       setEnrollment(enrollmentData);
       setProfile(profileData);
@@ -37,10 +42,12 @@ export function useAuth() {
           currentUser.id,
           enrollmentData.id
         );
+        console.log('useAuth - User subjects:', subjectsData);
         setUserSubjects(subjectsData);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
     }
   };
 

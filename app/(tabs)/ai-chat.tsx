@@ -130,7 +130,12 @@ export default function AIChatScreen() {
       // Add subject context to the message
       const contextualMessage = `${getUserSubjectsContext()} ${inputText.trim()}`;
       
+      console.log('AI Chat - Sending message:', contextualMessage);
+      console.log('AI Chat - Enrollment ID:', enrollment.id);
+      
       const response = await aiService.sendMessage(contextualMessage, enrollment.id);
+      
+      console.log('AI Chat - Response:', response);
       
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -147,7 +152,10 @@ export default function AIChatScreen() {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
     } catch (error: any) {
-      showAlert('Error', error?.message || 'Failed to send message. Please try again.');
+      console.error('AI Chat - Error:', error);
+      console.error('AI Chat - Error details:', JSON.stringify(error, null, 2));
+      const errorMessage = error?.message || error?.error?.message || 'Failed to send message. Please try again.';
+      showAlert('Error', errorMessage + ' (Check console for details)');
       // Remove the user message if send failed
       setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
     } finally {

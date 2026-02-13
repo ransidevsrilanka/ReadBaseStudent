@@ -18,6 +18,12 @@ export default function DashboardScreen() {
 
   const { subjects, loading } = useSubjects(subjectIds);
 
+  // Debug logging
+  console.log('Dashboard - userSubjects:', userSubjects);
+  console.log('Dashboard - subjectIds:', subjectIds);
+  console.log('Dashboard - subjects:', subjects);
+  console.log('Dashboard - loading:', loading);
+
   if (!enrollment || !profile) {
     return (
       <Screen>
@@ -52,6 +58,11 @@ export default function DashboardScreen() {
         ) : subjects.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>No subjects found</Text>
+            <Text style={styles.emptySubtext}>
+              {userSubjects 
+                ? `Subject IDs: ${subjectIds.join(', ')}`
+                : 'No user subjects data'}
+            </Text>
           </View>
         ) : (
           <View style={styles.subjectsGrid}>
@@ -112,5 +123,10 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: typography.fontSize.base,
     color: colors.textSecondary,
+  },
+  emptySubtext: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
 });
