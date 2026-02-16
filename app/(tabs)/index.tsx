@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Screen } from '@/components/layout/Screen';
 import { TierBadge } from '@/components/ui/TierBadge';
 import { useAuth } from '@/hooks/useAuth';
-import { useSubjects } from '@/hooks/useSubjects';
-import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
-import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS, TIER_DISPLAY_NAMES, AI_CREDIT_LIMITS } from '@/constants/config';
+import { colors, spacing, typography, borderRadius } from '@/constants/theme';
+import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS, AI_CREDIT_LIMITS } from '@/constants/config';
 import { aiService } from '@/services/ai';
 
 export default function DashboardScreen() {
@@ -15,25 +14,16 @@ export default function DashboardScreen() {
   const router = useRouter();
   const [aiCredits, setAiCredits] = useState({ used: 0, limit: 100 });
 
-  // Debug user subjects data
-  console.log('Dashboard - userSubjects:', userSubjects);
-  
-  const subjectIds = userSubjects
-    ? [userSubjects.subject_1, userSubjects.subject_2, userSubjects.subject_3].filter(Boolean)
+  // Get subject names directly from userSubjects
+  const subjects = userSubjects
+    ? [
+        { name: userSubjects.subject_1_name, code: userSubjects.subject_1_code || 'S1' },
+        { name: userSubjects.subject_2_name, code: userSubjects.subject_2_code || 'S2' },
+        { name: userSubjects.subject_3_name, code: userSubjects.subject_3_code || 'S3' },
+      ].filter(s => s.name)
     : [];
 
-  console.log('Dashboard - Extracted subject IDs:', subjectIds);
-  console.log('Dashboard - Subject IDs details:', {
-    subject_1: userSubjects?.subject_1,
-    subject_2: userSubjects?.subject_2,
-    subject_3: userSubjects?.subject_3,
-  });
-
-  const { subjects, loading, error } = useSubjects(subjectIds);
-  
-  console.log('Dashboard - Subjects loaded:', subjects);
-  console.log('Dashboard - Loading state:', loading);
-  console.log('Dashboard - Error state:', error);
+  console.log('Dashboard - Subjects:', subjects);
 
   useEffect(() => {
     if (user && enrollment) {
@@ -131,35 +121,22 @@ export default function DashboardScreen() {
             <Text style={styles.sectionSubtitle}>{GRADE_LABELS[enrollment.grade as keyof typeof GRADE_LABELS]} • {STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS]}</Text>
           </View>
 
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.primary} />
-            </View>
-          ) : subjects.length === 0 ? (
+          {subjects.length === 0 ? (
             <View style={styles.emptyState}>
               <MaterialIcons name="school" size={48} color={colors.textTertiary} />
               <Text style={styles.emptyText}>No subjects found</Text>
-              <Text style={styles.emptySubtext}>
-                {error || 'Please contact support if you believe this is an error.'}
-              </Text>
-              {userSubjects && (
-                <View style={styles.debugInfo}>
-                  <Text style={styles.debugText}>Debug Info:</Text>
-                  <Text style={styles.debugText}>Subject IDs: {JSON.stringify(subjectIds)}</Text>
-                  <Text style={styles.debugText}>Subject Names: {userSubjects.subject_1_name}, {userSubjects.subject_2_name}, {userSubjects.subject_3_name}</Text>
-                </View>
-              )}
+              <Text style={styles.emptySubtext}>Please contact support if you believe this is an error.</Text>
             </View>
           ) : (
             <View style={styles.subjectsList}>
               {subjects.map((subject, index) => (
                 <Pressable
-                  key={subject.id}
+                  key={index}
                   style={({ pressed }) => [
                     styles.subjectItem,
                     pressed && styles.subjectItemPressed,
                   ]}
-                  onPress={() => router.push(`/subject/${subject.id}`)}
+                  onPress={() => router.push(`/subject/${encodeURIComponent(subject.name)}`)}
                 >
                   <View style={styles.subjectIcon}>
                     <MaterialIcons name="menu-book" size={24} color={colors.textSecondary} />
