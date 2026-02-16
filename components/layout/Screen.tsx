@@ -1,4 +1,4 @@
-import { View, ScrollView, StyleSheet, Platform, Dimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, Platform, Dimensions, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '@/constants/theme';
 import { useState, useEffect } from 'react';
@@ -30,6 +30,7 @@ export function Screen({ children, scrollable = true, padding = true }: ScreenPr
   if (scrollable) {
     return (
       <View style={[styles.container, containerStyle]}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={[
@@ -46,6 +47,7 @@ export function Screen({ children, scrollable = true, padding = true }: ScreenPr
 
   return (
     <View style={[styles.container, containerStyle, padding && styles.padding]}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       {children}
     </View>
   );

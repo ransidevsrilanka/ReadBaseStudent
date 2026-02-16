@@ -5,41 +5,43 @@ export const colors = {
   primaryDark: '#553C9A',
   
   // Accent
-  accent: '#4299E1',
-  accentLight: '#63B3ED',
+  accent: '#10B981', // Green accent like web app
+  accentLight: '#34D399',
+  accentBlue: '#3B82F6',
   
   // Tier Colors
   silver: '#94A3B8',
   gold: '#F59E0B',
   platinum: '#8B5CF6',
   
-  // Backgrounds
-  background: '#FFFFFF',
-  surface: '#F8F9FA',
-  surfaceLight: '#FAFBFC',
-  card: '#FFFFFF',
+  // Dark Theme Backgrounds
+  background: '#0A0A0A', // Almost black
+  surface: '#141414', // Dark card background
+  surfaceLight: '#1A1A1A',
+  card: '#1A1A1A',
+  cardBorder: '#262626',
   
-  // Text
-  text: '#1A202C',
-  textSecondary: '#718096',
-  textTertiary: '#A0AEC0',
-  textInverse: '#FFFFFF',
+  // Text (Dark Theme)
+  text: '#FFFFFF',
+  textSecondary: '#A3A3A3',
+  textTertiary: '#737373',
+  textInverse: '#0A0A0A',
   
   // Semantic
-  success: '#48BB78',
-  warning: '#ED8936',
+  success: '#10B981',
+  warning: '#F59E0B',
   warningLight: '#FED7AA',
   warningDark: '#C05621',
-  error: '#F56565',
-  info: '#4299E1',
+  error: '#EF4444',
+  info: '#3B82F6',
   
   // Borders & Dividers
-  border: '#E2E8F0',
-  divider: '#EDF2F7',
+  border: '#262626',
+  divider: '#1F1F1F',
   
   // Status
-  active: '#48BB78',
-  inactive: '#CBD5E0',
+  active: '#10B981',
+  inactive: '#404040',
 };
 
 export const spacing = {
@@ -60,14 +62,20 @@ export const borderRadius = {
 };
 
 export const typography = {
+  fontFamily: {
+    regular: 'PlusJakartaSans-Regular',
+    medium: 'PlusJakartaSans-Medium',
+    semibold: 'PlusJakartaSans-SemiBold',
+    bold: 'PlusJakartaSans-Bold',
+  },
   fontSize: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    lg: 18,
+    xs: 11,
+    sm: 13,
+    base: 15,
+    lg: 17,
     xl: 20,
-    xxl: 24,
-    xxxl: 32,
+    xxl: 28,
+    xxxl: 36,
   },
   fontWeight: {
     regular: '400' as const,
