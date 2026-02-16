@@ -7,6 +7,39 @@ const supabaseModule = Platform.OS === 'web'
 const { supabase } = supabaseModule;
 
 export const contentService = {
+  async getSubjectsByIds(subjectIds: string[]) {
+    console.log('contentService - Fetching subjects by IDs:', subjectIds);
+    
+    if (!subjectIds || subjectIds.length === 0) {
+      console.log('contentService - No subject IDs provided');
+      return [];
+    }
+    
+    // Filter out null/undefined IDs
+    const validIds = subjectIds.filter(id => id && id.trim());
+    console.log('contentService - Valid IDs after filtering:', validIds);
+    
+    if (validIds.length === 0) {
+      console.log('contentService - No valid IDs after filtering');
+      return [];
+    }
+    
+    const { data, error } = await supabase
+      .from('subjects')
+      .select('*')
+      .in('id', validIds);
+    
+    console.log('contentService - Query response:', { data, error });
+    console.log('contentService - Number of subjects found:', data?.length || 0);
+    
+    if (error) {
+      console.error('contentService - Error fetching subjects:', error);
+      throw error;
+    }
+    
+    return data || [];
+  },
+
   async getSubjectById(subjectId: string) {
     console.log('contentService - Fetching subject by ID:', subjectId);
     
@@ -14,7 +47,6 @@ export const contentService = {
       .from('subjects')
       .select('*')
       .eq('id', subjectId)
-      .eq('is_active', true)
       .maybeSingle();
     
     console.log('contentService - Subject data:', data);

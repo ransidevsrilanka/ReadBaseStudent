@@ -15,11 +15,25 @@ export default function DashboardScreen() {
   const router = useRouter();
   const [aiCredits, setAiCredits] = useState({ used: 0, limit: 100 });
 
+  // Debug user subjects data
+  console.log('Dashboard - userSubjects:', userSubjects);
+  
   const subjectIds = userSubjects
     ? [userSubjects.subject_1, userSubjects.subject_2, userSubjects.subject_3].filter(Boolean)
     : [];
 
-  const { subjects, loading } = useSubjects(subjectIds);
+  console.log('Dashboard - Extracted subject IDs:', subjectIds);
+  console.log('Dashboard - Subject IDs details:', {
+    subject_1: userSubjects?.subject_1,
+    subject_2: userSubjects?.subject_2,
+    subject_3: userSubjects?.subject_3,
+  });
+
+  const { subjects, loading, error } = useSubjects(subjectIds);
+  
+  console.log('Dashboard - Subjects loaded:', subjects);
+  console.log('Dashboard - Loading state:', loading);
+  console.log('Dashboard - Error state:', error);
 
   useEffect(() => {
     if (user && enrollment) {
@@ -125,7 +139,16 @@ export default function DashboardScreen() {
             <View style={styles.emptyState}>
               <MaterialIcons name="school" size={48} color={colors.textTertiary} />
               <Text style={styles.emptyText}>No subjects found</Text>
-              <Text style={styles.emptySubtext}>Please contact support if you believe this is an error.</Text>
+              <Text style={styles.emptySubtext}>
+                {error || 'Please contact support if you believe this is an error.'}
+              </Text>
+              {userSubjects && (
+                <View style={styles.debugInfo}>
+                  <Text style={styles.debugText}>Debug Info:</Text>
+                  <Text style={styles.debugText}>Subject IDs: {JSON.stringify(subjectIds)}</Text>
+                  <Text style={styles.debugText}>Subject Names: {userSubjects.subject_1_name}, {userSubjects.subject_2_name}, {userSubjects.subject_3_name}</Text>
+                </View>
+              )}
             </View>
           ) : (
             <View style={styles.subjectsList}>
@@ -308,5 +331,20 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     color: colors.textTertiary,
     textAlign: 'center',
+  },
+  debugInfo: {
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    width: '100%',
+  },
+  debugText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textSecondary,
+    fontFamily: 'monospace',
+    marginBottom: spacing.xs,
   },
 });

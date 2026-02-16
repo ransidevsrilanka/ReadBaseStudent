@@ -11,10 +11,12 @@ export function useSubjects(subjectIds: string[]) {
 
   useEffect(() => {
     const fetchSubjects = async () => {
-      console.log('useSubjects - Subject IDs:', subjectIds);
+      console.log('useSubjects - Received subject IDs:', subjectIds);
+      console.log('useSubjects - IDs type check:', subjectIds.map(id => ({ id, type: typeof id, value: id })));
       
       if (!subjectIds || subjectIds.length === 0) {
-        console.log('useSubjects - No subject IDs, skipping fetch');
+        console.log('useSubjects - No subject IDs provided');
+        setSubjects([]);
         setLoading(false);
         return;
       }
@@ -23,29 +25,18 @@ export function useSubjects(subjectIds: string[]) {
         setLoading(true);
         setError(null);
         
-        console.log('useSubjects - Fetching subjects for IDs:', subjectIds);
+        // Use batch query instead of individual queries
+        const subjectsData = await contentService.getSubjectsByIds(subjectIds);
         
-        const subjectPromises = subjectIds.map(async (id) => {
-          console.log('useSubjects - Fetching subject:', id);
-          try {
-            return await contentService.getSubjectById(id);
-          } catch (err) {
-            console.error('useSubjects - Error fetching subject', id, ':', err);
-            return null;
-          }
-        });
+        console.log('useSubjects - Fetched subjects:', subjectsData);
+        console.log('useSubjects - Subject count:', subjectsData.length);
         
-        const subjectsData = await Promise.all(subjectPromises);
-        console.log('useSubjects - Raw subjects data:', subjectsData);
-        
-        const validSubjects = subjectsData.filter(Boolean);
-        console.log('useSubjects - Valid subjects:', validSubjects);
-        
-        setSubjects(validSubjects);
+        setSubjects(subjectsData);
       } catch (err) {
-        console.error('Error fetching subjects:', err);
-        console.error('Error details:', JSON.stringify(err, null, 2));
-        setError('Failed to load subjects');
+        console.error('useSubjects - Error:', err);
+        console.error('useSubjects - Error details:', JSON.stringify(err, null, 2));
+        setError(err instanceof Error ? err.message : 'Failed to load subjects');
+        setSubjects([]);
       } finally {
         setLoading(false);
       }
@@ -53,6 +44,8 @@ export function useSubjects(subjectIds: string[]) {
 
     fetchSubjects();
   }, [subjectIds.join(',')]);
+
+  console.log('useSubjects - Current state:', { subjectsCount: subjects.length, loading, error });
 
   return { subjects, loading, error };
 }
