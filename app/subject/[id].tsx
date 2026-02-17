@@ -4,14 +4,8 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Screen } from '@/components/layout/Screen';
 import { useAuth } from '@/hooks/useAuth';
+import { contentService } from '@/services/content';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
-import { Platform } from 'react-native';
-
-const supabaseModule = Platform.OS === 'web' 
-  ? require('@/services/supabase.web')
-  : require('@/services/supabase.native');
-
-const { supabase } = supabaseModule;
 
 interface Note {
   id: string;
@@ -19,6 +13,11 @@ interface Note {
   page_count: number;
   min_tier: string;
   created_at: string;
+}
+
+interface Topic {
+  id: string;
+  name: string;
 }
 
 export default function SubjectScreen() {
@@ -37,53 +36,39 @@ export default function SubjectScreen() {
     try {
       setLoading(true);
       
-      // Get subject by ID
-      const { data: subjectData, error: subjectError } = await supabase
-        .from('subjects')
-        .select('*')
-        .eq('id', id)
-        .single();
+      // Get subject by ID using content service
+      const subjectData = await contentService.getSubjectById(id);
 
-      if (subjectError || !subjectData) {
-        console.error('Subject not found:', subjectError);
+      if (!subjectData) {
+        console.error('Subject not found');
         setNotes([]);
         return;
       }
 
       setSubject(subjectData);
 
-      // Get topics for this subject
-      const { data: topics, error: topicsError } = await supabase
-        .from('topics')
-        .select('id')
-        .eq('subject_id', subjectData.id)
-        .eq('is_active', true);
+      // Get topics for this subject using content service
+      const topics = await contentService.getTopicsForSubject(subjectData.id);
 
-      if (topicsError || !topics || topics.length === 0) {
-        console.error('No topics found:', topicsError);
+      if (!topics || topics.length === 0) {
+        console.log('No topics found for subject');
         setNotes([]);
         return;
       }
 
-      const topicIds = topics.map(t => t.id);
+      // Get notes for all topics
+      const allNotes = await Promise.all(
+        topics.map(topic => contentService.getNotesForTopic(topic.id))
+      );
 
-      // Get notes for these topics
-      const { data: notesData, error: notesError } = await supabase
-        .from('notes')
-        .select('*')
-        .in('topic_id', topicIds)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+      // Flatten and sort notes by creation date
+      const flattenedNotes = allNotes
+        .flat()
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      if (notesError) {
-        console.error('Error loading notes:', notesError);
-        setNotes([]);
-        return;
-      }
-
-      setNotes(notesData || []);
+      setNotes(flattenedNotes);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error loading subject and notes:', error);
       setNotes([]);
     } finally {
       setLoading(false);
