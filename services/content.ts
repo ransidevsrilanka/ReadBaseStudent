@@ -1,10 +1,4 @@
-import { Platform } from 'react-native';
-
-const supabaseModule = Platform.OS === 'web' 
-  ? require('./supabase.web')
-  : require('./supabase.native');
-
-const { supabase } = supabaseModule;
+import { supabase } from './supabase';
 
 export const contentService = {
   /**

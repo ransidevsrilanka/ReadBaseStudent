@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Platform } from 'react-native';
 import { authService } from '@/services/auth';
 import { enrollmentService } from '@/services/enrollment';
+import { supabase } from '@/services/supabase';
 import type { User } from '@supabase/supabase-js';
+import type { Database } from '@/services/supabase';
 
-const supabaseModule = Platform.OS === 'web' 
-  ? require('@/services/supabase.web')
-  : require('@/services/supabase.native');
-
-const { supabase } = supabaseModule;
-
-type Database = typeof supabaseModule.Database;
 type Enrollment = Database['enrollments'];
 type Profile = Database['profiles'];
 type UserSubjects = Database['user_subjects'];
