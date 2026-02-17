@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Pressable, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Pressable, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Screen } from '@/components/layout/Screen';
@@ -18,6 +18,8 @@ interface Note {
 interface Topic {
   id: string;
   name: string;
+  description?: string;
+  notes: Note[];
 }
 
 export default function SubjectScreen() {
@@ -25,14 +27,15 @@ export default function SubjectScreen() {
   const router = useRouter();
   const { enrollment } = useAuth();
   const [subject, setSubject] = useState<any>(null);
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadSubjectAndNotes();
+    loadSubjectAndTopics();
   }, [id]);
 
-  const loadSubjectAndNotes = async () => {
+  const loadSubjectAndTopics = async () => {
     try {
       setLoading(true);
       
@@ -41,58 +44,123 @@ export default function SubjectScreen() {
 
       if (!subjectData) {
         console.error('Subject not found');
-        setNotes([]);
+        setTopics([]);
         return;
       }
 
       setSubject(subjectData);
 
       // Get topics for this subject using content service
-      const topics = await contentService.getTopicsForSubject(subjectData.id);
+      const topicsData = await contentService.getTopicsForSubject(subjectData.id);
 
-      if (!topics || topics.length === 0) {
+      if (!topicsData || topicsData.length === 0) {
         console.log('No topics found for subject');
-        setNotes([]);
+        setTopics([]);
         return;
       }
 
-      // Get notes for all topics
-      const allNotes = await Promise.all(
-        topics.map(topic => contentService.getNotesForTopic(topic.id))
+      // Get notes for each topic
+      const topicsWithNotes = await Promise.all(
+        topicsData.map(async (topic) => {
+          const notes = await contentService.getNotesForTopic(topic.id);
+          return {
+            ...topic,
+            notes: notes || [],
+          };
+        })
       );
 
-      // Flatten and sort notes by creation date
-      const flattenedNotes = allNotes
-        .flat()
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      setNotes(flattenedNotes);
+      setTopics(topicsWithNotes);
+      
+      // Auto-expand first topic if it has notes
+      if (topicsWithNotes.length > 0 && topicsWithNotes[0].notes.length > 0) {
+        setExpandedTopics(new Set([topicsWithNotes[0].id]));
+      }
     } catch (error) {
-      console.error('Error loading subject and notes:', error);
-      setNotes([]);
+      console.error('Error loading subject and topics:', error);
+      setTopics([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const renderNote = ({ item }: { item: Note }) => (
-    <Pressable
-      style={({ pressed }) => [
-        styles.noteItem,
-        pressed && styles.noteItemPressed,
-      ]}
-      onPress={() => router.push(`/pdf/${item.id}`)}
-    >
-      <View style={styles.noteIcon}>
-        <MaterialIcons name="picture-as-pdf" size={24} color={colors.error} />
+  const toggleTopic = (topicId: string) => {
+    setExpandedTopics(prev => {
+      const next = new Set(prev);
+      if (next.has(topicId)) {
+        next.delete(topicId);
+      } else {
+        next.add(topicId);
+      }
+      return next;
+    });
+  };
+
+  const renderTopic = (topic: Topic) => {
+    const isExpanded = expandedTopics.has(topic.id);
+    const noteCount = topic.notes.length;
+
+    return (
+      <View key={topic.id} style={styles.topicContainer}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.topicHeader,
+            pressed && styles.topicHeaderPressed,
+          ]}
+          onPress={() => toggleTopic(topic.id)}
+        >
+          <View style={styles.topicHeaderLeft}>
+            <MaterialIcons 
+              name={isExpanded ? 'folder-open' : 'folder'} 
+              size={24} 
+              color={colors.primary} 
+            />
+            <View style={styles.topicHeaderText}>
+              <Text style={styles.topicName}>{topic.name}</Text>
+              <Text style={styles.topicCount}>{noteCount} document{noteCount !== 1 ? 's' : ''}</Text>
+            </View>
+          </View>
+          <MaterialIcons 
+            name={isExpanded ? 'expand-less' : 'expand-more'} 
+            size={24} 
+            color={colors.textSecondary} 
+          />
+        </Pressable>
+
+        {isExpanded && (
+          <View style={styles.notesContainer}>
+            {topic.notes.length === 0 ? (
+              <View style={styles.emptyNotes}>
+                <Text style={styles.emptyNotesText}>No documents in this topic</Text>
+              </View>
+            ) : (
+              topic.notes.map((note) => (
+                <Pressable
+                  key={note.id}
+                  style={({ pressed }) => [
+                    styles.noteItem,
+                    pressed && styles.noteItemPressed,
+                  ]}
+                  onPress={() => router.push(`/pdf/${note.id}`)}
+                >
+                  <View style={styles.noteIcon}>
+                    <MaterialIcons name="picture-as-pdf" size={20} color={colors.error} />
+                  </View>
+                  <View style={styles.noteContent}>
+                    <Text style={styles.noteTitle}>{note.title}</Text>
+                    <Text style={styles.noteSubtitle}>{note.page_count} pages</Text>
+                  </View>
+                  <MaterialIcons name="chevron-right" size={20} color={colors.textTertiary} />
+                </Pressable>
+              ))
+            )}
+          </View>
+        )}
       </View>
-      <View style={styles.noteContent}>
-        <Text style={styles.noteTitle}>{item.title}</Text>
-        <Text style={styles.noteSubtitle}>{item.page_count} pages</Text>
-      </View>
-      <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
-    </Pressable>
-  );
+    );
+  };
+
+  const totalNotes = topics.reduce((sum, topic) => sum + topic.notes.length, 0);
 
   return (
     <>
@@ -112,22 +180,24 @@ export default function SubjectScreen() {
         ) : (
           <>
             <View style={styles.header}>
-              <Text style={styles.subtitle}>{notes.length} documents</Text>
+              <Text style={styles.subtitle}>
+                {topics.length} topic{topics.length !== 1 ? 's' : ''} · {totalNotes} document{totalNotes !== 1 ? 's' : ''}
+              </Text>
             </View>
             
-            {notes.length === 0 ? (
+            {topics.length === 0 ? (
               <View style={styles.emptyState}>
                 <MaterialIcons name="folder-open" size={64} color={colors.textTertiary} />
-                <Text style={styles.emptyText}>No documents found</Text>
+                <Text style={styles.emptyText}>No topics found</Text>
               </View>
             ) : (
-              <FlatList
-                data={notes}
-                renderItem={renderNote}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={styles.list}
+              <ScrollView 
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
-              />
+              >
+                {topics.map(renderTopic)}
+              </ScrollView>
             )}
           </>
         )}
@@ -144,33 +214,84 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
   },
   subtitle: {
-    fontSize: typography.fontSize.base,
+    fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
   },
-  list: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: spacing.md,
-    gap: spacing.sm,
+    gap: spacing.md,
+  },
+  topicContainer: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    overflow: 'hidden',
+  },
+  topicHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: spacing.lg,
+  },
+  topicHeaderPressed: {
+    backgroundColor: colors.surfaceLight,
+  },
+  topicHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  topicHeaderText: {
+    flex: 1,
+    gap: spacing.xs / 2,
+  },
+  topicName: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+  },
+  topicCount: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+  },
+  notesContainer: {
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorder,
+    backgroundColor: colors.surface,
+  },
+  emptyNotes: {
+    padding: spacing.lg,
+    alignItems: 'center',
+  },
+  emptyNotesText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textTertiary,
+    fontStyle: 'italic',
   },
   noteItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    padding: spacing.lg,
+    padding: spacing.md,
+    paddingLeft: spacing.xl,
     gap: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cardBorder,
   },
   noteItemPressed: {
-    opacity: 0.7,
     backgroundColor: colors.surfaceLight,
   },
   noteIcon: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: borderRadius.sm,
     backgroundColor: colors.error + '15',
     alignItems: 'center',
@@ -182,7 +303,7 @@ const styles = StyleSheet.create({
   },
   noteTitle: {
     fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
+    fontWeight: typography.fontWeight.medium,
     color: colors.text,
   },
   noteSubtitle: {
