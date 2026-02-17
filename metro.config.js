@@ -2,25 +2,7 @@ const { getDefaultConfig } = require('expo/metro-config');
 
 const config = getDefaultConfig(__dirname);
 
-// Exclude react-native-pdf from web builds
-config.resolver.platforms = ['ios', 'android', 'web'];
-
-// Ensure platform-specific extensions are resolved correctly
-config.resolver.sourceExts = [
-  'expo.tsx',
-  'expo.ts',
-  'expo.js',
-  'native.tsx',
-  'native.ts',
-  'web.tsx',
-  'web.ts',
-  'tsx',
-  'ts',
-  'jsx',
-  'js',
-  'json',
-];
-
+// Block react-native-pdf on web platform
 const defaultResolveRequest = config.resolver.resolveRequest;
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
