@@ -1,35 +1,81 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Screen } from '@/components/layout/Screen';
 import { TierBadge } from '@/components/ui/TierBadge';
 import { useAuth } from '@/hooks/useAuth';
+import { contentService } from '@/services/content';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
 import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS, AI_CREDIT_LIMITS } from '@/constants/config';
 import { aiService } from '@/services/ai';
+
+interface Subject {
+  id: string;
+  name: string;
+  subject_code: string;
+  grade: string;
+  medium: string;
+}
 
 export default function DashboardScreen() {
   const { enrollment, userSubjects, profile, user } = useAuth();
   const router = useRouter();
   const [aiCredits, setAiCredits] = useState({ used: 0, limit: 100 });
-
-  // Get subject names directly from userSubjects
-  const subjects = userSubjects
-    ? [
-        { name: userSubjects.subject_1_name, code: userSubjects.subject_1_code || 'S1' },
-        { name: userSubjects.subject_2_name, code: userSubjects.subject_2_code || 'S2' },
-        { name: userSubjects.subject_3_name, code: userSubjects.subject_3_code || 'S3' },
-      ].filter(s => s.name)
-    : [];
-
-  console.log('Dashboard - Subjects:', subjects);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
 
   useEffect(() => {
     if (user && enrollment) {
       loadAICredits();
+      loadSubjects();
     }
-  }, [user, enrollment]);
+  }, [user, enrollment, userSubjects]);
+
+  const loadSubjects = async () => {
+    if (!enrollment || !userSubjects) {
+      console.log('Dashboard - No enrollment or user subjects');
+      setSubjects([]);
+      setLoadingSubjects(false);
+      return;
+    }
+
+    try {
+      setLoadingSubjects(true);
+      
+      // Build subject codes array with medium overrides
+      const subjectCodes = [
+        {
+          code: userSubjects.subject_1_code,
+          medium: userSubjects.subject_1_medium,
+        },
+        {
+          code: userSubjects.subject_2_code,
+          medium: userSubjects.subject_2_medium,
+        },
+        {
+          code: userSubjects.subject_3_code,
+          medium: userSubjects.subject_3_medium,
+        },
+      ].filter(s => s.code);
+
+      console.log('Dashboard - Loading subjects with codes:', subjectCodes);
+
+      const fetchedSubjects = await contentService.getEnrolledSubjects(
+        enrollment.grade,
+        enrollment.medium,
+        subjectCodes
+      );
+
+      console.log('Dashboard - Fetched subjects:', fetchedSubjects);
+      setSubjects(fetchedSubjects);
+    } catch (error) {
+      console.error('Dashboard - Error loading subjects:', error);
+      setSubjects([]);
+    } finally {
+      setLoadingSubjects(false);
+    }
+  };
 
   const loadAICredits = async () => {
     if (!user || !enrollment) return;
@@ -121,7 +167,12 @@ export default function DashboardScreen() {
             <Text style={styles.sectionSubtitle}>{GRADE_LABELS[enrollment.grade as keyof typeof GRADE_LABELS]} • {STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS]}</Text>
           </View>
 
-          {subjects.length === 0 ? (
+          {loadingSubjects ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Loading subjects...</Text>
+            </View>
+          ) : subjects.length === 0 ? (
             <View style={styles.emptyState}>
               <MaterialIcons name="school" size={48} color={colors.textTertiary} />
               <Text style={styles.emptyText}>No subjects found</Text>
@@ -129,14 +180,14 @@ export default function DashboardScreen() {
             </View>
           ) : (
             <View style={styles.subjectsList}>
-              {subjects.map((subject, index) => (
+              {subjects.map((subject) => (
                 <Pressable
-                  key={index}
+                  key={subject.id}
                   style={({ pressed }) => [
                     styles.subjectItem,
                     pressed && styles.subjectItemPressed,
                   ]}
-                  onPress={() => router.push(`/subject/${encodeURIComponent(subject.name)}`)}
+                  onPress={() => router.push(`/subject/${subject.id}`)}
                 >
                   <View style={styles.subjectIcon}>
                     <MaterialIcons name="menu-book" size={24} color={colors.textSecondary} />
@@ -293,6 +344,11 @@ const styles = StyleSheet.create({
   loadingContainer: {
     paddingVertical: spacing.xxl,
     alignItems: 'center',
+    gap: spacing.md,
+  },
+  loadingText: {
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
   },
   emptyState: {
     paddingVertical: spacing.xxl,

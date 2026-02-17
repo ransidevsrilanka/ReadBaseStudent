@@ -7,6 +7,83 @@ const supabaseModule = Platform.OS === 'web'
 const { supabase } = supabaseModule;
 
 export const contentService = {
+  /**
+   * Fetches subjects based on enrollment data and selected subject codes
+   * Properly handles grade, medium, and per-subject medium overrides
+   */
+  async getEnrolledSubjects(
+    enrollmentGrade: string,
+    enrollmentMedium: string,
+    subjectCodes: { code: string; medium?: string }[]
+  ) {
+    console.log('contentService - Fetching enrolled subjects:', {
+      enrollmentGrade,
+      enrollmentMedium,
+      subjectCodes,
+    });
+
+    if (!subjectCodes || subjectCodes.length === 0) {
+      return [];
+    }
+
+    const codes = subjectCodes.map(s => s.code).filter(Boolean);
+    if (codes.length === 0) {
+      return [];
+    }
+
+    // For combo grade, fetch from both al_grade12 and al_grade13
+    const grades = enrollmentGrade === 'al_combo' 
+      ? ['al_grade12', 'al_grade13'] 
+      : [enrollmentGrade];
+
+    console.log('contentService - Querying grades:', grades);
+
+    // Build queries for each unique medium
+    const mediumsToQuery = new Set<string>();
+    
+    subjectCodes.forEach(s => {
+      // Use per-subject medium override if available, else enrollment medium
+      const medium = s.medium || enrollmentMedium;
+      mediumsToQuery.add(medium);
+    });
+
+    console.log('contentService - Mediums to query:', Array.from(mediumsToQuery));
+
+    // Fetch subjects for all grade/medium combinations
+    const promises = Array.from(mediumsToQuery).flatMap(medium =>
+      grades.map(grade =>
+        supabase
+          .from('subjects')
+          .select('*')
+          .eq('grade', grade)
+          .eq('medium', medium)
+          .in('subject_code', codes)
+          .eq('is_active', true)
+      )
+    );
+
+    const results = await Promise.all(promises);
+    
+    // Combine all results
+    const allSubjects = results.flatMap(r => r.data || []);
+    
+    console.log('contentService - Raw subjects found:', allSubjects.length);
+
+    // Match subjects to requested codes with proper medium
+    const matchedSubjects = subjectCodes
+      .map(({ code, medium }) => {
+        const targetMedium = medium || enrollmentMedium;
+        return allSubjects.find(
+          s => s.subject_code === code && s.medium === targetMedium
+        );
+      })
+      .filter(Boolean);
+
+    console.log('contentService - Matched subjects:', matchedSubjects.length);
+    
+    return matchedSubjects;
+  },
+
   async getSubjectsByIds(subjectIds: string[]) {
     console.log('contentService - Fetching subjects by IDs:', subjectIds);
     

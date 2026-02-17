@@ -25,37 +25,38 @@ export default function SubjectScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { enrollment } = useAuth();
+  const [subject, setSubject] = useState<any>(null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const subjectName = decodeURIComponent(id);
-
   useEffect(() => {
-    loadNotes();
+    loadSubjectAndNotes();
   }, [id]);
 
-  const loadNotes = async () => {
+  const loadSubjectAndNotes = async () => {
     try {
       setLoading(true);
       
-      // Get subject by name
-      const { data: subject, error: subjectError } = await supabase
+      // Get subject by ID
+      const { data: subjectData, error: subjectError } = await supabase
         .from('subjects')
-        .select('id')
-        .ilike('name', subjectName)
+        .select('*')
+        .eq('id', id)
         .single();
 
-      if (subjectError || !subject) {
+      if (subjectError || !subjectData) {
         console.error('Subject not found:', subjectError);
         setNotes([]);
         return;
       }
 
+      setSubject(subjectData);
+
       // Get topics for this subject
       const { data: topics, error: topicsError } = await supabase
         .from('topics')
         .select('id')
-        .eq('subject_id', subject.id)
+        .eq('subject_id', subjectData.id)
         .eq('is_active', true);
 
       if (topicsError || !topics || topics.length === 0) {
@@ -113,7 +114,7 @@ export default function SubjectScreen() {
       <Stack.Screen 
         options={{ 
           headerShown: true, 
-          headerTitle: subjectName,
+          headerTitle: subject?.name || 'Subject',
           headerStyle: { backgroundColor: colors.surface },
           headerTintColor: colors.text,
         }} 
