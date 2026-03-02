@@ -18,6 +18,7 @@ export const TIER_HIERARCHY = {
 export const GRADE_LABELS = {
   al_grade12: 'Grade 12 (A/L 1st Year)',
   al_grade13: 'Grade 13 (A/L 2nd Year)',
+  al_combo: 'All-Access (G12 + G13)',
   ol_grade10: 'Grade 10 (O/L)',
   ol_grade11: 'Grade 11 (O/L)',
 } as const;
@@ -35,8 +36,19 @@ export const MEDIUM_LABELS = {
   sinhala: 'Sinhala',
 } as const;
 
+// Updated AI credit limits based on ReadBase platform spec
 export const AI_CREDIT_LIMITS = {
-  starter: 100,
-  standard: 300,
-  lifetime: 500,
+  starter: 0,      // Silver - NO AI access
+  standard: 1000,  // Gold - 1,000 credits/month
+  lifetime: 10000, // Platinum - 10,000 credits/month
 } as const;
+
+// Combo users get +2,000 credits (first month only)
+export const COMBO_FIRST_MONTH_BONUS = 2000;
+
+// Session management
+export const SESSION_HEARTBEAT_INTERVAL = 5 * 60 * 1000; // 5 minutes
+export const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+// Print request settings
+export const PRINT_REQUEST_PREFIX = 'PR';

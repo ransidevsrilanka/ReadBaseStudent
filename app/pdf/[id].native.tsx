@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Platform, Pressable } from '
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import Pdf from 'react-native-pdf';
+import * as ScreenCapture from 'expo-screen-capture';
 import { pdfService } from '@/services/pdf';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/template';
@@ -47,6 +48,23 @@ export default function PDFViewerScreen() {
     };
 
     fetchPDFAccess();
+
+    // Prevent screenshots (Android FLAG_SECURE handled at app level)
+    // For iOS, we monitor screen capture events
+    const preventScreenshot = async () => {
+      try {
+        await ScreenCapture.preventScreenCaptureAsync();
+      } catch (error) {
+        console.warn('Could not prevent screenshot:', error);
+      }
+    };
+
+    preventScreenshot();
+
+    return () => {
+      // Re-enable screenshots when leaving PDF viewer
+      ScreenCapture.allowScreenCaptureAsync().catch(console.warn);
+    };
   }, [id]);
 
   const handleDownload = async () => {

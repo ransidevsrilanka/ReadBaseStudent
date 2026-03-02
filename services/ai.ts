@@ -1,6 +1,11 @@
 import { supabase } from './supabase';
+import { AI_CREDIT_LIMITS, COMBO_FIRST_MONTH_BONUS } from '@/constants/config';
 
 export const aiService = {
+  /**
+   * Get AI credits for current month
+   * Returns credit data or null if not found (will be auto-created on first use)
+   */
   async getAICredits(userId: string, enrollmentId: string) {
     const monthYear = new Date().toISOString().slice(0, 7);
     
@@ -10,10 +15,20 @@ export const aiService = {
       .eq('user_id', userId)
       .eq('enrollment_id', enrollmentId)
       .eq('month_year', monthYear)
-      .single();
+      .maybeSingle();
     
     if (error && error.code !== 'PGRST116') throw error;
     return data;
+  },
+
+  /**
+   * Calculate credit limit for a tier
+   * Includes combo bonus if applicable
+   */
+  calculateCreditLimit(tier: string, isCombo: boolean, isFirstMonth: boolean = false): number {
+    const baseLimit = AI_CREDIT_LIMITS[tier as keyof typeof AI_CREDIT_LIMITS] || 0;
+    const comboBonus = isCombo && isFirstMonth ? COMBO_FIRST_MONTH_BONUS : 0;
+    return baseLimit + comboBonus;
   },
 
   async sendMessage(message: string, enrollmentId: string) {

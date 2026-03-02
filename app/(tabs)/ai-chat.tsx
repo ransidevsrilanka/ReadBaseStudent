@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { aiService } from '@/services/ai';
 import { useAlert } from '@/template';
 import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
-import { AI_CREDIT_LIMITS } from '@/constants/config';
+import { AI_CREDIT_LIMITS, COMBO_FIRST_MONTH_BONUS } from '@/constants/config';
 
 interface Message {
   id: string;
@@ -72,7 +72,10 @@ export default function AIChatScreen() {
         setCreditsUsed(creditsData.credits_used);
         setCreditsLimit(creditsData.credits_limit);
       } else {
-        setCreditsLimit(AI_CREDIT_LIMITS[enrollment.tier as keyof typeof AI_CREDIT_LIMITS]);
+        // Calculate expected limit based on tier and combo status
+        const isCombo = enrollment.grade === 'al_combo';
+        const limit = aiService.calculateCreditLimit(enrollment.tier, isCombo, true);
+        setCreditsLimit(limit);
       }
     } catch (error) {
       console.error('Error loading credits:', error);
@@ -98,6 +101,15 @@ export default function AIChatScreen() {
 
     const creditsRemaining = creditsLimit - creditsUsed;
     const usagePercent = (creditsUsed / creditsLimit) * 100;
+
+    // Block Silver tier users
+    if (enrollment.tier === 'starter') {
+      showAlert(
+        'AI Access Unavailable',
+        'AI Tutor is only available for Gold and Platinum tier members. Upgrade your subscription to access this feature.'
+      );
+      return;
+    }
 
     // Warning at 80% usage
     if (usagePercent >= 80 && usagePercent < 100) {
@@ -190,6 +202,22 @@ export default function AIChatScreen() {
         <View style={styles.emptyState}>
           <MaterialIcons name="smart-toy" size={64} color={colors.textTertiary} />
           <Text style={styles.emptyText}>Please log in to use AI Tutor</Text>
+        </View>
+      </Screen>
+    );
+  }
+
+  // Block Silver tier
+  if (enrollment.tier === 'starter') {
+    return (
+      <Screen>
+        <View style={styles.emptyState}>
+          <MaterialIcons name="lock" size={64} color={colors.textTertiary} />
+          <Text style={styles.emptyText}>AI Access Unavailable</Text>
+          <Text style={styles.emptySubtext}>
+            AI Tutor is only available for Gold and Platinum members.{' \n'}
+            Upgrade your subscription to access this feature.
+          </Text>
         </View>
       </Screen>
     );

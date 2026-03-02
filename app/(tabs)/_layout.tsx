@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { colors } from '@/constants/theme';
 
 export default function TabLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, sessionConflict } = useAuth();
   const insets = useSafeAreaInsets();
 
   if (loading) {
@@ -15,6 +15,10 @@ export default function TabLayout() {
 
   if (!user) {
     return <Redirect href="/login" />;
+  }
+
+  if (sessionConflict) {
+    return <Redirect href="/session-conflict" />;
   }
 
   const tabBarStyle = {

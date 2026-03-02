@@ -7,7 +7,7 @@ import { TierBadge } from '@/components/ui/TierBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { contentService } from '@/services/content';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
-import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS, AI_CREDIT_LIMITS } from '@/constants/config';
+import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS, TIER_NAMES } from '@/constants/config';
 import { aiService } from '@/services/ai';
 
 interface Subject {
@@ -84,7 +84,10 @@ export default function DashboardScreen() {
       if (creditsData) {
         setAiCredits({ used: creditsData.credits_used, limit: creditsData.credits_limit });
       } else {
-        setAiCredits({ used: 0, limit: AI_CREDIT_LIMITS[enrollment.tier as keyof typeof AI_CREDIT_LIMITS] });
+        // Calculate limit based on tier and combo status
+        const isCombo = enrollment.grade === 'al_combo';
+        const limit = aiService.calculateCreditLimit(enrollment.tier, isCombo, true);
+        setAiCredits({ used: 0, limit });
       }
     } catch (error) {
       console.error('Error loading AI credits:', error);
@@ -110,6 +113,12 @@ export default function DashboardScreen() {
             <Text style={styles.label}>DASHBOARD</Text>
             <Text style={styles.greeting}>Welcome back, {profile.full_name}</Text>
           </View>
+          {enrollment.grade === 'al_combo' && (
+            <View style={styles.comboBadge}>
+              <MaterialIcons name="workspace-premium" size={16} color={colors.accent} />
+              <Text style={styles.comboText}>All-Access</Text>
+            </View>
+          )}
         </View>
 
         {/* Info Cards Grid */}
@@ -210,6 +219,26 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  comboBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs / 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+    backgroundColor: colors.accent + '15',
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  comboText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.accent,
+    letterSpacing: 0.5,
   },
   label: {
     fontSize: typography.fontSize.xs,
