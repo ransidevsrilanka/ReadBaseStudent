@@ -158,7 +158,17 @@ export default function InboxScreen() {
         </ScrollView>
       )}
 
-      {/* Future: Add "Request Print" button */}
+      {/* Floating Action Button */}
+      <Pressable
+        style={({ pressed }) => [
+          styles.fab,
+          { bottom: insets.bottom + 80 }, // Above tab bar
+          pressed && styles.fabPressed,
+        ]}
+        onPress={() => router.push('/print-request')}
+      >
+        <MaterialIcons name="print" size={24} color={colors.textInverse} />
+      </Pressable>
     </View>
   );
 }
@@ -279,5 +289,24 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
     flex: 1,
+  },
+  fab: {
+    position: 'absolute',
+    right: spacing.lg,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.95 }],
   },
 });

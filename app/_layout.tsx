@@ -14,6 +14,7 @@ export default function RootLayout() {
           <Stack.Screen name="subject/[id]" options={{ presentation: 'card', headerShown: true, headerTitle: 'Topics' }} />
           <Stack.Screen name="topic/[id]" options={{ presentation: 'card', headerShown: true, headerTitle: 'Topic Content' }} />
           <Stack.Screen name="pdf/[id]" options={{ presentation: 'modal', headerShown: true, headerTitle: 'Note Viewer' }} />
+          <Stack.Screen name="print-request" options={{ presentation: 'card', headerShown: true, headerTitle: 'Request Print' }} />
         </Stack>
       </SafeAreaProvider>
     </AlertProvider>
