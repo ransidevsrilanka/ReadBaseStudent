@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter, Stack } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,12 +18,6 @@ interface Subject {
 interface Topic {
   id: string;
   name: string;
-}
-
-interface ModelPaper {
-  id: string;
-  title: string;
-  page_count: number;
 }
 
 interface SelectedItem {
@@ -45,6 +39,7 @@ export default function PrintRequestScreen() {
 
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
@@ -69,20 +64,33 @@ export default function PrintRequestScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadSubjects();
     if (enrollment?.full_name) setFullName(enrollment.full_name);
     if (enrollment?.phone) setPhone(enrollment.phone);
   }, [enrollment]);
 
+  useEffect(() => {
+    loadSubjects();
+  }, [enrollment, userSubjects]);
+
   const loadSubjects = async () => {
-    if (!enrollment || !userSubjects) return;
+    if (!enrollment || !userSubjects) {
+      console.log('Print Request - Missing enrollment or userSubjects');
+      setSubjects([]);
+      setLoadingSubjects(false);
+      return;
+    }
 
     try {
+      setLoadingSubjects(true);
+      console.log('Print Request - Loading subjects for:', { enrollment, userSubjects });
+      
       const subjectCodes = [
         { code: userSubjects.subject_1_code, medium: userSubjects.subject_1_medium },
         { code: userSubjects.subject_2_code, medium: userSubjects.subject_2_medium },
         { code: userSubjects.subject_3_code, medium: userSubjects.subject_3_medium },
       ].filter(s => s.code);
+
+      console.log('Print Request - Subject codes:', subjectCodes);
 
       const fetchedSubjects = await contentService.getEnrolledSubjects(
         enrollment.grade,
@@ -90,9 +98,14 @@ export default function PrintRequestScreen() {
         subjectCodes
       );
 
+      console.log('Print Request - Fetched subjects:', fetchedSubjects);
       setSubjects(fetchedSubjects);
     } catch (error) {
-      console.error('Error loading subjects:', error);
+      console.error('Print Request - Error loading subjects:', error);
+      showAlert('Error', 'Failed to load subjects. Please try again.');
+      setSubjects([]);
+    } finally {
+      setLoadingSubjects(false);
     }
   };
 
@@ -124,13 +137,11 @@ export default function PrintRequestScreen() {
 
   const handleNextStep = async () => {
     if (currentStep === 0) {
-      // Step 1 validation
       if (!selectedSubject || selectedItems.length === 0) {
-        showAlert('Selection Required', 'Please select a subject and at least one topic or model paper.');
+        showAlert('Selection Required', 'Please select a subject and at least one topic.');
         return;
       }
       
-      // Calculate price
       setLoading(true);
       try {
         const topicIds = selectedItems
@@ -157,11 +168,10 @@ export default function PrintRequestScreen() {
         setDeliveryFee(priceData.deliveryFee);
         setTotalAmount(priceData.totalAmount);
 
-        // Check for combo first-print perk
         if (enrollment?.grade === 'al_combo' && !enrollment?.combo_first_print_used) {
           const discountAmount = Math.round(priceData.subtotal * 0.1);
           setDiscount(discountAmount);
-          setTotalAmount(priceData.subtotal - discountAmount); // Free delivery for combo
+          setTotalAmount(priceData.subtotal - discountAmount);
         }
         
         setCurrentStep(1);
@@ -172,17 +182,14 @@ export default function PrintRequestScreen() {
         setLoading(false);
       }
     } else if (currentStep === 1) {
-      // Step 2: Move to delivery
       setCurrentStep(2);
     } else if (currentStep === 2) {
-      // Step 3 validation
       if (!fullName || !phone || !address || !city) {
         showAlert('Details Required', 'Please fill in all delivery details.');
         return;
       }
       setCurrentStep(3);
     } else if (currentStep === 3) {
-      // Step 4: Submit
       await handleSubmit();
     }
   };
@@ -199,25 +206,11 @@ export default function PrintRequestScreen() {
     setSubmitting(true);
 
     try {
-      const topicIds = selectedItems
-        .filter(item => item.type === 'topic')
-        .map(item => item.topicId!)
-        .filter(Boolean);
-      
-      const paperIds = selectedItems
-        .filter(item => item.type === 'model_paper')
-        .map(item => item.noteId!)
-        .filter(Boolean);
+      const topicIds = selectedItems.filter(item => item.type === 'topic').map(item => item.topicId!).filter(Boolean);
+      const paperIds = selectedItems.filter(item => item.type === 'model_paper').map(item => item.noteId!).filter(Boolean);
+      const paperTitles = selectedItems.filter(item => item.type === 'model_paper').map(item => item.title);
 
-      const paperTitles = selectedItems
-        .filter(item => item.type === 'model_paper')
-        .map(item => item.title);
-
-      const printType = topicIds.length > 0 && paperIds.length > 0 
-        ? 'both' 
-        : topicIds.length > 0 
-          ? 'notes' 
-          : 'model_papers';
+      const printType = topicIds.length > 0 && paperIds.length > 0 ? 'both' : topicIds.length > 0 ? 'notes' : 'model_papers';
 
       const requestData = {
         subjectId: selectedSubject.id,
@@ -247,24 +240,12 @@ export default function PrintRequestScreen() {
         subtotal: item.pageCount * pricePerPage,
       }));
 
-      const result = await printService.submitPrintRequest(
-        user.id,
-        enrollment.id,
-        requestData,
-        items
-      );
+      const result = await printService.submitPrintRequest(user.id, enrollment.id, requestData, items);
 
       showAlert(
         'Request Submitted',
-        `Your print request ${result.requestNumber} has been submitted successfully. You'll receive updates in your inbox.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              router.replace('/(tabs)/inbox');
-            },
-          },
-        ]
+        `Your print request ${result.requestNumber} has been submitted successfully.`,
+        [{ text: 'OK', onPress: () => router.replace('/(tabs)/inbox') }]
       );
     } catch (error) {
       console.error('Error submitting print request:', error);
@@ -278,12 +259,7 @@ export default function PrintRequestScreen() {
     <View style={styles.stepIndicator}>
       {STEPS.map((step, index) => (
         <View key={index} style={styles.stepItem}>
-          <View
-            style={[
-              styles.stepCircle,
-              index <= currentStep && styles.stepCircleActive,
-            ]}
-          >
+          <View style={[styles.stepCircle, index <= currentStep && styles.stepCircleActive]}>
             {index < currentStep ? (
               <MaterialIcons name="check" size={16} color={colors.textInverse} />
             ) : (
@@ -304,24 +280,33 @@ export default function PrintRequestScreen() {
     <ScrollView style={styles.stepContent} showsVerticalScrollIndicator={false}>
       <Text style={styles.stepTitle}>Select Study Materials to Print</Text>
       
-      {/* Subject Selection */}
       {!selectedSubject ? (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Choose a Subject</Text>
-          {subjects.map(subject => (
-            <Pressable
-              key={subject.id}
-              style={({ pressed }) => [
-                styles.subjectCard,
-                pressed && styles.cardPressed,
-              ]}
-              onPress={() => handleSubjectSelect(subject)}
-            >
-              <MaterialIcons name="menu-book" size={24} color={colors.primary} />
-              <Text style={styles.subjectName}>{subject.name}</Text>
-              <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
-            </Pressable>
-          ))}
+          {loadingSubjects ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Loading subjects...</Text>
+            </View>
+          ) : subjects.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <MaterialIcons name="school" size={48} color={colors.textTertiary} />
+              <Text style={styles.emptyText}>No subjects available</Text>
+              <Text style={styles.emptySubtext}>Please contact support if this is an error</Text>
+            </View>
+          ) : (
+            subjects.map(subject => (
+              <Pressable
+                key={subject.id}
+                style={({ pressed }) => [styles.subjectCard, pressed && styles.cardPressed]}
+                onPress={() => handleSubjectSelect(subject)}
+              >
+                <MaterialIcons name="menu-book" size={24} color={colors.primary} />
+                <Text style={styles.subjectName}>{subject.name}</Text>
+                <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
+              </Pressable>
+            ))
+          )}
         </View>
       ) : (
         <View style={styles.section}>
@@ -340,7 +325,10 @@ export default function PrintRequestScreen() {
           </View>
 
           {loading ? (
-            <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={styles.loadingText}>Loading topics...</Text>
+            </View>
           ) : (
             <>
               <Text style={styles.sectionTitle}>Select Topics</Text>
@@ -349,9 +337,7 @@ export default function PrintRequestScreen() {
               </Text>
               
               {topics.map(topic => {
-                const isSelected = selectedItems.some(
-                  item => item.type === 'topic' && item.topicId === topic.id
-                );
+                const isSelected = selectedItems.some(item => item.type === 'topic' && item.topicId === topic.id);
                 
                 return (
                   <Pressable
@@ -365,7 +351,7 @@ export default function PrintRequestScreen() {
                       id: topic.id,
                       type: 'topic',
                       title: topic.name,
-                      pageCount: 0, // Will be calculated by server
+                      pageCount: 0,
                       topicId: topic.id,
                     })}
                   >
@@ -558,7 +544,7 @@ export default function PrintRequestScreen() {
           </View>
           <View style={styles.paymentInfo}>
             <Text style={styles.paymentTitle}>Bank Transfer</Text>
-            <Text style={styles.paymentSubtitle}>We'll send you bank details via inbox</Text>
+            <Text style={styles.paymentSubtitle}>Bank details via inbox</Text>
           </View>
           <MaterialIcons name="account-balance" size={24} color={colors.textSecondary} />
         </Pressable>
@@ -627,7 +613,6 @@ export default function PrintRequestScreen() {
           {currentStep === 3 && renderStep4()}
         </View>
 
-        {/* Navigation Buttons */}
         <View style={styles.navigationButtons}>
           {currentStep > 0 && (
             <Pressable
@@ -746,6 +731,30 @@ const styles = StyleSheet.create({
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
     marginBottom: spacing.md,
+  },
+  loadingContainer: {
+    paddingVertical: spacing.xxl,
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  loadingText: {
+    fontSize: typography.fontSize.base,
+    color: colors.textSecondary,
+  },
+  emptyContainer: {
+    paddingVertical: spacing.xxl,
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  emptyText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textSecondary,
+  },
+  emptySubtext: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textTertiary,
+    textAlign: 'center',
   },
   subjectCard: {
     flexDirection: 'row',

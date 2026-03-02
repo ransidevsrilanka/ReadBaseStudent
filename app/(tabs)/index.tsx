@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Screen } from '@/components/layout/Screen';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TierBadge } from '@/components/ui/TierBadge';
 import { useAuth } from '@/hooks/useAuth';
 import { contentService } from '@/services/content';
 import { colors, spacing, typography, borderRadius } from '@/constants/theme';
-import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS, TIER_NAMES } from '@/constants/config';
+import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS } from '@/constants/config';
 import { aiService } from '@/services/ai';
 
 interface Subject {
@@ -21,6 +22,7 @@ interface Subject {
 export default function DashboardScreen() {
   const { enrollment, userSubjects, profile, user } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [aiCredits, setAiCredits] = useState({ used: 0, limit: 100 });
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
@@ -34,7 +36,6 @@ export default function DashboardScreen() {
 
   const loadSubjects = async () => {
     if (!enrollment || !userSubjects) {
-      console.log('Dashboard - No enrollment or user subjects');
       setSubjects([]);
       setLoadingSubjects(false);
       return;
@@ -43,23 +44,11 @@ export default function DashboardScreen() {
     try {
       setLoadingSubjects(true);
       
-      // Build subject codes array with medium overrides
       const subjectCodes = [
-        {
-          code: userSubjects.subject_1_code,
-          medium: userSubjects.subject_1_medium,
-        },
-        {
-          code: userSubjects.subject_2_code,
-          medium: userSubjects.subject_2_medium,
-        },
-        {
-          code: userSubjects.subject_3_code,
-          medium: userSubjects.subject_3_medium,
-        },
+        { code: userSubjects.subject_1_code, medium: userSubjects.subject_1_medium },
+        { code: userSubjects.subject_2_code, medium: userSubjects.subject_2_medium },
+        { code: userSubjects.subject_3_code, medium: userSubjects.subject_3_medium },
       ].filter(s => s.code);
-
-      console.log('Dashboard - Loading subjects with codes:', subjectCodes);
 
       const fetchedSubjects = await contentService.getEnrolledSubjects(
         enrollment.grade,
@@ -67,7 +56,6 @@ export default function DashboardScreen() {
         subjectCodes
       );
 
-      console.log('Dashboard - Fetched subjects:', fetchedSubjects);
       setSubjects(fetchedSubjects);
     } catch (error) {
       console.error('Dashboard - Error loading subjects:', error);
@@ -84,7 +72,6 @@ export default function DashboardScreen() {
       if (creditsData) {
         setAiCredits({ used: creditsData.credits_used, limit: creditsData.credits_limit });
       } else {
-        // Calculate limit based on tier and combo status
         const isCombo = enrollment.grade === 'al_combo';
         const limit = aiService.calculateCreditLimit(enrollment.tier, isCombo, true);
         setAiCredits({ used: 0, limit });
@@ -96,132 +83,246 @@ export default function DashboardScreen() {
 
   if (!enrollment || !profile) {
     return (
-      <Screen>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>No active enrollment found</Text>
         </View>
-      </Screen>
+      </View>
     );
   }
 
+  const creditsRemaining = aiCredits.limit - aiCredits.used;
+  const creditsPercent = (creditsRemaining / aiCredits.limit) * 100;
+
   return (
-    <Screen>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.label}>DASHBOARD</Text>
-            <Text style={styles.greeting}>Welcome back, {profile.full_name}</Text>
-          </View>
-          {enrollment.grade === 'al_combo' && (
-            <View style={styles.comboBadge}>
-              <MaterialIcons name="workspace-premium" size={16} color={colors.accent} />
-              <Text style={styles.comboText}>All-Access</Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Hero Header with Gradient */}
+        <LinearGradient
+          colors={['#7C3AED', '#5B21B6']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroGradient}
+        >
+          <View style={styles.heroContent}>
+            <View style={styles.heroTop}>
+              <View style={styles.heroText}>
+                <Text style={styles.heroGreeting}>Welcome back,</Text>
+                <Text style={styles.heroName}>{profile.full_name}</Text>
+                {enrollment.grade === 'al_combo' && (
+                  <View style={styles.comboBadge}>
+                    <MaterialIcons name="workspace-premium" size={14} color="#FCD34D" />
+                    <Text style={styles.comboText}>All-Access Pass</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.tierBadgeContainer}>
+                <TierBadge tier={enrollment.tier} size="small" />
+              </View>
             </View>
-          )}
+
+            <View style={styles.statsGrid}>
+              <View style={styles.statCard}>
+                <MaterialIcons name="school" size={20} color="rgba(255,255,255,0.9)" />
+                <Text style={styles.statValue}>{subjects.length}</Text>
+                <Text style={styles.statLabel}>Subjects</Text>
+              </View>
+              <View style={styles.statCard}>
+                <MaterialIcons name="auto-awesome" size={20} color="#FCD34D" />
+                <Text style={styles.statValue}>{creditsRemaining}</Text>
+                <Text style={styles.statLabel}>AI Credits</Text>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Quick Info Cards */}
+        <View style={styles.quickInfoSection}>
+          <View style={styles.quickInfoCard}>
+            <View style={styles.quickInfoIcon}>
+              <MaterialIcons name="category" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.quickInfoText}>
+              <Text style={styles.quickInfoLabel}>Stream</Text>
+              <Text style={styles.quickInfoValue}>
+                {STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS] || enrollment.stream}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.quickInfoCard}>
+            <View style={styles.quickInfoIcon}>
+              <MaterialIcons name="language" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.quickInfoText}>
+              <Text style={styles.quickInfoLabel}>Medium</Text>
+              <Text style={styles.quickInfoValue}>
+                {MEDIUM_LABELS[enrollment.medium as keyof typeof MEDIUM_LABELS]}
+              </Text>
+            </View>
+          </View>
         </View>
 
-        {/* Info Cards Grid */}
-        <View style={styles.infoGrid}>
-          {/* Subjects Count */}
-          <View style={styles.infoCard}>
-            <MaterialIcons name="school" size={24} color={colors.primary} />
-            <Text style={styles.infoValue}>{subjects.length}</Text>
-            <Text style={styles.infoLabel}>SUBJECTS</Text>
-          </View>
-
-          {/* Stream */}
-          <View style={styles.infoCard}>
-            <MaterialIcons name="category" size={24} color={colors.primary} />
-            <Text style={styles.infoValue}>{STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS]?.split(' ')[0] || enrollment.stream}</Text>
-            <Text style={styles.infoLabel}>STREAM</Text>
-          </View>
-
-          {/* Medium */}
-          <View style={styles.infoCard}>
-            <MaterialIcons name="language" size={24} color={colors.primary} />
-            <Text style={styles.infoValue}>{MEDIUM_LABELS[enrollment.medium as keyof typeof MEDIUM_LABELS]}</Text>
-            <Text style={styles.infoLabel}>MEDIUM</Text>
-          </View>
-
-          {/* AI Credits */}
-          <View style={[styles.infoCard, styles.aiCreditsCard]}>
-            <MaterialIcons name="auto-awesome" size={24} color={colors.accent} />
-            <Text style={[styles.infoValue, { color: colors.accent }]}>{aiCredits.limit - aiCredits.used}</Text>
-            <Text style={styles.infoLabel}>AI CREDITS</Text>
-          </View>
+        {/* Subscription Status */}
+        <View style={styles.subscriptionCard}>
+          <LinearGradient
+            colors={['rgba(124, 58, 237, 0.1)', 'rgba(91, 33, 182, 0.05)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.subscriptionGradient}
+          >
+            <View style={styles.subscriptionContent}>
+              <View style={styles.subscriptionLeft}>
+                <View style={styles.subscriptionIconWrapper}>
+                  <MaterialIcons name="verified-user" size={24} color={colors.success} />
+                </View>
+                <View>
+                  <Text style={styles.subscriptionTitle}>Active Subscription</Text>
+                  <Text style={styles.subscriptionExpiry}>
+                    {enrollment.expires_at 
+                      ? `Valid until ${new Date(enrollment.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                      : 'Lifetime Access'
+                    }
+                  </Text>
+                </View>
+              </View>
+              <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
+            </View>
+          </LinearGradient>
         </View>
 
-        {/* Subscription Card */}
-        <Pressable style={styles.subscriptionCard}>
-          <View style={styles.subscriptionIcon}>
-            <MaterialIcons name="card-membership" size={24} color={colors.info} />
-          </View>
-          <View style={styles.subscriptionContent}>
-            <Text style={styles.subscriptionTitle}>Subscription Active</Text>
-            <Text style={styles.subscriptionSubtitle}>
-              {enrollment.expires_at 
-                ? `Expires ${new Date(enrollment.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-                : 'Lifetime Access'
-              }
-            </Text>
-          </View>
-          <TierBadge tier={enrollment.tier} size="small" />
-        </Pressable>
-
-        {/* Your Subjects Section */}
+        {/* Your Subjects */}
         <View style={styles.subjectsSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Your Subjects</Text>
-            <Text style={styles.sectionSubtitle}>{GRADE_LABELS[enrollment.grade as keyof typeof GRADE_LABELS]} • {STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS]}</Text>
-          </View>
+          <Text style={styles.sectionTitle}>Your Subjects</Text>
+          <Text style={styles.sectionSubtitle}>
+            {GRADE_LABELS[enrollment.grade as keyof typeof GRADE_LABELS]}
+          </Text>
 
           {loadingSubjects ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={styles.loadingText}>Loading subjects...</Text>
             </View>
           ) : subjects.length === 0 ? (
-            <View style={styles.emptyState}>
-              <MaterialIcons name="school" size={48} color={colors.textTertiary} />
+            <View style={styles.emptySubjects}>
+              <MaterialIcons name="school" size={64} color={colors.textTertiary} />
               <Text style={styles.emptyText}>No subjects found</Text>
-              <Text style={styles.emptySubtext}>Please contact support if you believe this is an error.</Text>
+              <Text style={styles.emptySubtext}>Please contact support if this is an error.</Text>
             </View>
           ) : (
-            <View style={styles.subjectsList}>
-              {subjects.map((subject) => (
+            <View style={styles.subjectCards}>
+              {subjects.map((subject, index) => (
                 <Pressable
                   key={subject.id}
                   style={({ pressed }) => [
-                    styles.subjectItem,
-                    pressed && styles.subjectItemPressed,
+                    styles.subjectCard,
+                    pressed && styles.subjectCardPressed,
                   ]}
                   onPress={() => router.push(`/subject/${subject.id}`)}
                 >
-                  <View style={styles.subjectIcon}>
-                    <MaterialIcons name="menu-book" size={24} color={colors.textSecondary} />
-                  </View>
-                  <View style={styles.subjectContent}>
+                  <LinearGradient
+                    colors={
+                      index % 3 === 0
+                        ? ['rgba(124, 58, 237, 0.15)', 'rgba(124, 58, 237, 0.05)']
+                        : index % 3 === 1
+                        ? ['rgba(59, 130, 246, 0.15)', 'rgba(59, 130, 246, 0.05)']
+                        : ['rgba(16, 185, 129, 0.15)', 'rgba(16, 185, 129, 0.05)']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.subjectGradient}
+                  >
+                    <View style={styles.subjectCardHeader}>
+                      <View style={[
+                        styles.subjectIconWrapper,
+                        { backgroundColor: 
+                          index % 3 === 0 
+                            ? 'rgba(124, 58, 237, 0.2)' 
+                            : index % 3 === 1 
+                            ? 'rgba(59, 130, 246, 0.2)' 
+                            : 'rgba(16, 185, 129, 0.2)'
+                        }
+                      ]}>
+                        <MaterialIcons 
+                          name="menu-book" 
+                          size={28} 
+                          color={
+                            index % 3 === 0 
+                              ? '#7C3AED' 
+                              : index % 3 === 1 
+                              ? '#3B82F6' 
+                              : '#10B981'
+                          } 
+                        />
+                      </View>
+                      <MaterialIcons name="arrow-forward" size={20} color={colors.textSecondary} />
+                    </View>
+                    
                     <Text style={styles.subjectName}>{subject.name}</Text>
-                    <Text style={styles.subjectSubtitle}>View topics and notes</Text>
-                  </View>
-                  <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
+                    
+                    <View style={styles.subjectMeta}>
+                      <View style={styles.metaItem}>
+                        <MaterialIcons name="bookmark" size={14} color={colors.textTertiary} />
+                        <Text style={styles.metaText}>{subject.subject_code}</Text>
+                      </View>
+                      <View style={styles.metaDivider} />
+                      <View style={styles.metaItem}>
+                        <MaterialIcons name="language" size={14} color={colors.textTertiary} />
+                        <Text style={styles.metaText}>{subject.medium}</Text>
+                      </View>
+                    </View>
+                  </LinearGradient>
                 </Pressable>
               ))}
             </View>
           )}
         </View>
+
+        <View style={{ height: spacing.xl }} />
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    marginBottom: spacing.lg,
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl,
+  },
+  heroGradient: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  heroContent: {
+    padding: spacing.xl,
+  },
+  heroTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: spacing.lg,
+  },
+  heroText: {
+    flex: 1,
+  },
+  heroGreeting: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: spacing.xs / 2,
+  },
+  heroName: {
+    fontSize: typography.fontSize.xxl + 2,
+    fontWeight: typography.fontWeight.bold,
+    color: '#FFFFFF',
+    marginBottom: spacing.sm,
   },
   comboBadge: {
     flexDirection: 'row',
@@ -229,98 +330,122 @@ const styles = StyleSheet.create({
     gap: spacing.xs / 2,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs / 2,
-    backgroundColor: colors.accent + '15',
+    backgroundColor: 'rgba(252, 211, 77, 0.2)',
     borderRadius: borderRadius.full,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
+    alignSelf: 'flex-start',
   },
   comboText: {
     fontSize: typography.fontSize.xs,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.accent,
+    color: '#FCD34D',
     letterSpacing: 0.5,
   },
-  label: {
-    fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.primary,
-    letterSpacing: 1.2,
-    marginBottom: spacing.xs,
+  tierBadgeContainer: {
+    marginLeft: spacing.sm,
   },
-  greeting: {
-    fontSize: typography.fontSize.xxl,
-    fontWeight: typography.fontWeight.bold,
-    color: colors.text,
-    lineHeight: typography.fontSize.xxl * 1.3,
-  },
-  infoGrid: {
+  statsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing.sm,
-    marginBottom: spacing.lg,
   },
-  infoCard: {
+  statCard: {
     flex: 1,
-    minWidth: '48%',
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    padding: spacing.lg,
-    gap: spacing.xs,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    alignItems: 'center',
+    gap: spacing.xs / 2,
   },
-  aiCreditsCard: {
-    borderColor: colors.accent + '40',
-    backgroundColor: colors.accent + '08',
-  },
-  infoValue: {
+  statValue: {
     fontSize: typography.fontSize.xl,
     fontWeight: typography.fontWeight.bold,
-    color: colors.text,
+    color: '#FFFFFF',
   },
-  infoLabel: {
+  statLabel: {
     fontSize: typography.fontSize.xs,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.textTertiary,
+    color: 'rgba(255, 255, 255, 0.7)',
     letterSpacing: 0.5,
   },
-  subscriptionCard: {
+  quickInfoSection: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  quickInfoCard: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.info + '40',
-    padding: spacing.lg,
-    gap: spacing.md,
-    marginBottom: spacing.lg,
+    borderColor: colors.cardBorder,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
-  subscriptionIcon: {
-    width: 48,
-    height: 48,
+  quickInfoIcon: {
+    width: 36,
+    height: 36,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.info + '15',
+    backgroundColor: colors.primary + '15',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  subscriptionContent: {
+  quickInfoText: {
     flex: 1,
-    gap: spacing.xs / 2,
+  },
+  quickInfoLabel: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textTertiary,
+    marginBottom: spacing.xs / 4,
+  },
+  quickInfoValue: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+  },
+  subscriptionCard: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.md,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.success + '40',
+  },
+  subscriptionGradient: {
+    padding: spacing.lg,
+  },
+  subscriptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  subscriptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  subscriptionIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.success + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   subscriptionTitle: {
     fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
     color: colors.text,
+    marginBottom: spacing.xs / 2,
   },
-  subscriptionSubtitle: {
+  subscriptionExpiry: {
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
   },
   subjectsSection: {
-    marginTop: spacing.md,
-  },
-  sectionHeader: {
-    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.xl,
   },
   sectionTitle: {
     fontSize: typography.fontSize.xl,
@@ -331,55 +456,13 @@ const styles = StyleSheet.create({
   sectionSubtitle: {
     fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
-  },
-  subjectsList: {
-    gap: spacing.xs,
-  },
-  subjectItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    padding: spacing.lg,
-    gap: spacing.md,
-  },
-  subjectItemPressed: {
-    opacity: 0.7,
-    backgroundColor: colors.surfaceLight,
-  },
-  subjectIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.sm,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subjectContent: {
-    flex: 1,
-    gap: spacing.xs / 2,
-  },
-  subjectName: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
-  },
-  subjectSubtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textSecondary,
+    marginBottom: spacing.lg,
   },
   loadingContainer: {
     paddingVertical: spacing.xxl,
     alignItems: 'center',
-    gap: spacing.md,
   },
-  loadingText: {
-    fontSize: typography.fontSize.base,
-    color: colors.textSecondary,
-  },
-  emptyState: {
+  emptySubjects: {
     paddingVertical: spacing.xxl,
     alignItems: 'center',
     gap: spacing.sm,
@@ -394,19 +477,65 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     textAlign: 'center',
   },
-  debugInfo: {
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    width: '100%',
+  subjectCards: {
+    gap: spacing.md,
   },
-  debugText: {
+  subjectCard: {
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
+  subjectCardPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  subjectGradient: {
+    padding: spacing.lg,
+  },
+  subjectCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  subjectIconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subjectName: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.sm,
+    lineHeight: typography.fontSize.lg * 1.4,
+  },
+  subjectMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs / 2,
+  },
+  metaDivider: {
+    width: 1,
+    height: 12,
+    backgroundColor: colors.divider,
+  },
+  metaText: {
     fontSize: typography.fontSize.xs,
-    color: colors.textSecondary,
-    fontFamily: 'monospace',
-    marginBottom: spacing.xs,
+    color: colors.textTertiary,
+    textTransform: 'capitalize',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
