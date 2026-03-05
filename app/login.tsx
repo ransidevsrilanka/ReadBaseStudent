@@ -27,7 +27,7 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      await authService.login(email, password);
+      await authService.signIn(email, password);
       router.replace('/(tabs)');
     } catch (error: any) {
       showAlert('Login Failed', error.message || 'Invalid credentials');
