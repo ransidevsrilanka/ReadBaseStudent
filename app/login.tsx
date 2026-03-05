@@ -1,140 +1,274 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Screen } from '@/components/layout/Screen';
-import { Button } from '@/components/ui/Button';
-import { useAuth } from '@/hooks/useAuth';
+import { View, Text, TextInput, Pressable, StyleSheet, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter, Stack } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { authService } from '@/services/auth';
 import { useAlert } from '@/template';
-import { colors, spacing, borderRadius, typography } from '@/constants/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { spacing, typography, borderRadius } from '@/constants/theme';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { colors } = useTheme();
   const { showAlert } = useAlert();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      showAlert('Error', 'Please enter email and password');
+      showAlert('Missing Information', 'Please enter both email and password.');
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      await signIn(email, password);
+      await authService.login(email, password);
       router.replace('/(tabs)');
     } catch (error: any) {
-      showAlert('Login Failed', error?.message || 'Invalid credentials');
+      showAlert('Login Failed', error.message || 'Invalid credentials');
     } finally {
       setLoading(false);
     }
   };
 
+  const styles = createStyles(colors);
+
   return (
-    <Screen scrollable={false} padding={false}>
-      <KeyboardAvoidingView
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      
+      <KeyboardAvoidingView 
+        style={[styles.container, { paddingTop: insets.top }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
       >
         <View style={styles.content}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to access your study materials</Text>
+          {/* Hero Section with 3D Illustration */}
+          <View style={styles.heroSection}>
+            <View style={styles.illustrationContainer}>
+              <LinearGradient
+                colors={[colors.primary + '40', colors.primaryDark + '20']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.illustrationBg}
+              >
+                <MaterialIcons name="school" size={80} color={colors.primary} />
+              </LinearGradient>
+            </View>
+
+            <View style={styles.heroText}>
+              <Text style={styles.heroTitle}>Learn Smarter,{'\n'}Score Higher.</Text>
+              <Text style={styles.heroSubtitle}>
+                Access your study materials anytime, anywhere with ReadBase Premium
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
+          {/* Login Form */}
+          <View style={styles.formSection}>
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="email" size={20} color={colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
+                placeholder="Email address"
+                placeholderTextColor={colors.textTertiary}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="your.email@example.com"
-                placeholderTextColor={colors.textTertiary}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
+            <View style={styles.inputContainer}>
+              <MaterialIcons name="lock" size={20} color={colors.textTertiary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={colors.textTertiary}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Enter your password"
-                placeholderTextColor={colors.textTertiary}
-                secureTextEntry
+                secureTextEntry={!showPassword}
                 autoCapitalize="none"
               />
+              <Pressable
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <MaterialIcons 
+                  name={showPassword ? 'visibility' : 'visibility-off'} 
+                  size={20} 
+                  color={colors.textTertiary} 
+                />
+              </Pressable>
             </View>
 
-            <Button
-              title="Sign In"
+            <Pressable
+              style={({ pressed }) => [
+                styles.loginButton,
+                pressed && styles.buttonPressed,
+                loading && styles.buttonDisabled,
+              ]}
               onPress={handleLogin}
-              loading={loading}
-              fullWidth
-              size="large"
-            />
+              disabled={loading}
+            >
+              <LinearGradient
+                colors={[colors.primary, colors.primaryDark]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.gradientButton}
+              >
+                <Text style={styles.loginButtonText}>
+                  {loading ? 'Logging in...' : 'Login'}
+                </Text>
+              </LinearGradient>
+            </Pressable>
 
-            <Button
-              title="Create Account"
-              onPress={() => router.push('/signup')}
-              variant="outline"
-              fullWidth
-            />
+            <Pressable
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                pressed && styles.buttonPressed,
+              ]}
+            >
+              <Text style={styles.secondaryButtonText}>Create Account</Text>
+            </Pressable>
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.footerLink}>Terms & Conditions</Text>
+              {' '}and{' '}
+              <Text style={styles.footerLink}>Privacy Policy</Text>
+            </Text>
           </View>
         </View>
       </KeyboardAvoidingView>
-    </Screen>
+    </>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.lg,
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
+  },
+  heroSection: {
+    flex: 1,
     justifyContent: 'center',
-    gap: spacing.xxl,
+    alignItems: 'center',
+    paddingTop: spacing.xxl,
   },
-  header: {
-    gap: spacing.sm,
+  illustrationContainer: {
+    marginBottom: spacing.xl,
   },
-  title: {
-    fontSize: typography.fontSize.xxxl,
+  illustrationBg: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroText: {
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  heroTitle: {
+    fontSize: 32,
     fontWeight: typography.fontWeight.bold,
     color: colors.text,
+    textAlign: 'center',
+    lineHeight: 38,
   },
-  subtitle: {
+  heroSubtitle: {
     fontSize: typography.fontSize.base,
     color: colors.textSecondary,
-    lineHeight: typography.fontSize.base * typography.lineHeight.relaxed,
+    textAlign: 'center',
+    lineHeight: typography.fontSize.base * 1.5,
+    paddingHorizontal: spacing.lg,
   },
-  form: {
-    gap: spacing.lg,
+  formSection: {
+    gap: spacing.md,
   },
-  inputGroup: {
-    gap: spacing.sm,
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.text,
-  },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: spacing.sm,
+  },
+  input: {
+    flex: 1,
     fontSize: typography.fontSize.base,
     color: colors.text,
+  },
+  eyeIcon: {
+    padding: spacing.xs,
+  },
+  loginButton: {
+    marginTop: spacing.md,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  gradientButton: {
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loginButtonText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.textInverse,
+  },
+  secondaryButton: {
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: colors.surface,
-    includeFontPadding: false,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  secondaryButtonText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
+  },
+  buttonPressed: {
+    opacity: 0.8,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  footer: {
+    marginTop: spacing.lg,
+    paddingTop: spacing.lg,
+  },
+  footerText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.textTertiary,
+    textAlign: 'center',
+    lineHeight: typography.fontSize.xs * 1.5,
+  },
+  footerLink: {
+    color: colors.primary,
+    fontWeight: typography.fontWeight.medium,
   },
 });

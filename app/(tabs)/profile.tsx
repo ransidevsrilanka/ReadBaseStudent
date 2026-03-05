@@ -1,230 +1,306 @@
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Switch, ScrollView } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { Screen } from '@/components/layout/Screen';
-import { Button } from '@/components/ui/Button';
-import { TierBadge } from '@/components/ui/TierBadge';
+import { useRouter, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
-import { useAlert } from '@/template';
-import { colors, spacing, borderRadius, typography, shadows } from '@/constants/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { TierBadge } from '@/components/ui/TierBadge';
+import { spacing, typography, borderRadius } from '@/constants/theme';
+import { GRADE_LABELS, STREAM_LABELS, MEDIUM_LABELS } from '@/constants/config';
 
 export default function ProfileScreen() {
-  const { profile, enrollment, signOut, loading } = useAuth();
-  const { showAlert } = useAlert();
+  const { colors, mode, toggleTheme } = useTheme();
+  const { enrollment, profile, forceLogout } = useAuth();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-  const handleSignOut = async () => {
-    showAlert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          router.replace('/login');
-        },
-      },
-    ]);
+  const handleLogout = async () => {
+    await forceLogout();
+    router.replace('/login');
   };
 
-  // Show loading state
-  if (loading) {
-    return (
-      <Screen>
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </View>
-      </Screen>
-    );
-  }
-
-  // Show minimal profile with logout if data is missing
-  if (!profile || !enrollment) {
-    return (
-      <Screen>
-        <View style={styles.centerContainer}>
-          <MaterialIcons name="person-outline" size={64} color={colors.textTertiary} />
-          <Text style={styles.emptyText}>Profile data unavailable</Text>
-          <Text style={styles.emptySubtext}>You can still sign out</Text>
-        </View>
-        <View style={styles.footer}>
-          <Button title="Sign Out" onPress={handleSignOut} variant="outline" fullWidth />
-        </View>
-      </Screen>
-    );
-  }
-
-  const expiryDate = enrollment.expires_at
-    ? new Date(enrollment.expires_at).toLocaleDateString()
-    : 'Lifetime';
+  const styles = createStyles(colors);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          <MaterialIcons name="person" size={48} color={colors.textInverse} />
-        </View>
-        <Text style={styles.name}>{profile.full_name}</Text>
-        <Text style={styles.email}>{profile.email}</Text>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Subscription</Text>
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Tier</Text>
-            <TierBadge tier={enrollment.tier} />
+    <>
+      <Stack.Screen 
+        options={{ 
+          headerShown: false,
+        }} 
+      />
+      
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Profile</Text>
           </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.label}>Status</Text>
-            <View style={styles.statusBadge}>
-              <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
-              <Text style={styles.statusText}>Active</Text>
+
+          {/* Profile Card */}
+          <View style={styles.profileCard}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatar}>
+                <MaterialIcons name="person" size={40} color={colors.primary} />
+              </View>
+            </View>
+            
+            <Text style={styles.profileName}>{profile?.full_name || 'Student'}</Text>
+            <Text style={styles.profileEmail}>{profile?.email}</Text>
+            
+            {enrollment && (
+              <View style={styles.tierBadgeWrapper}>
+                <TierBadge tier={enrollment.tier} size="medium" />
+              </View>
+            )}
+          </View>
+
+          {/* Enrollment Info */}
+          {enrollment && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Enrollment Details</Text>
+              
+              <View style={styles.infoCard}>
+                <View style={styles.infoRow}>
+                  <MaterialIcons name="school" size={20} color={colors.textSecondary} />
+                  <Text style={styles.infoLabel}>Grade</Text>
+                  <Text style={styles.infoValue}>
+                    {GRADE_LABELS[enrollment.grade as keyof typeof GRADE_LABELS]}
+                  </Text>
+                </View>
+
+                {enrollment.stream && (
+                  <View style={styles.infoRow}>
+                    <MaterialIcons name="category" size={20} color={colors.textSecondary} />
+                    <Text style={styles.infoLabel}>Stream</Text>
+                    <Text style={styles.infoValue}>
+                      {STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS]}
+                    </Text>
+                  </View>
+                )}
+
+                <View style={styles.infoRow}>
+                  <MaterialIcons name="language" size={20} color={colors.textSecondary} />
+                  <Text style={styles.infoLabel}>Medium</Text>
+                  <Text style={styles.infoValue}>
+                    {MEDIUM_LABELS[enrollment.medium as keyof typeof MEDIUM_LABELS]}
+                  </Text>
+                </View>
+
+                <View style={styles.infoRow}>
+                  <MaterialIcons name="event" size={20} color={colors.textSecondary} />
+                  <Text style={styles.infoLabel}>Valid Until</Text>
+                  <Text style={styles.infoValue}>
+                    {enrollment.expires_at 
+                      ? new Date(enrollment.expires_at).toLocaleDateString()
+                      : 'Lifetime'
+                    }
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          {/* Settings */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Settings</Text>
+            
+            <View style={styles.settingsCard}>
+              <View style={styles.settingRow}>
+                <View style={styles.settingInfo}>
+                  <MaterialIcons name="dark-mode" size={20} color={colors.textSecondary} />
+                  <Text style={styles.settingLabel}>Dark Mode</Text>
+                </View>
+                <Switch
+                  value={mode === 'dark'}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.textInverse}
+                />
+              </View>
+
+              <View style={styles.divider} />
+
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.settingRow,
+                  pressed && styles.settingPressed,
+                ]}
+              >
+                <View style={styles.settingInfo}>
+                  <MaterialIcons name="notifications" size={20} color={colors.textSecondary} />
+                  <Text style={styles.settingLabel}>Notifications</Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={20} color={colors.textTertiary} />
+              </Pressable>
+
+              <View style={styles.divider} />
+
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.settingRow,
+                  pressed && styles.settingPressed,
+                ]}
+              >
+                <View style={styles.settingInfo}>
+                  <MaterialIcons name="security" size={20} color={colors.textSecondary} />
+                  <Text style={styles.settingLabel}>Privacy & Security</Text>
+                </View>
+                <MaterialIcons name="chevron-right" size={20} color={colors.textTertiary} />
+              </Pressable>
             </View>
           </View>
-          <View style={styles.divider} />
-          <View style={styles.row}>
-            <Text style={styles.label}>Expires</Text>
-            <Text style={styles.value}>{expiryDate}</Text>
+
+          {/* Logout */}
+          <View style={styles.section}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.logoutButton,
+                pressed && styles.logoutPressed,
+              ]}
+              onPress={handleLogout}
+            >
+              <MaterialIcons name="logout" size={20} color={colors.error} />
+              <Text style={styles.logoutText}>Log Out</Text>
+            </Pressable>
           </View>
-        </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Actions</Text>
-        <Pressable style={styles.actionItem}>
-          <MaterialIcons name="help-outline" size={24} color={colors.textSecondary} />
-          <Text style={styles.actionText}>Help & Support</Text>
-          <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
-        </Pressable>
-        <Pressable style={styles.actionItem}>
-          <MaterialIcons name="info-outline" size={24} color={colors.textSecondary} />
-          <Text style={styles.actionText}>About</Text>
-          <MaterialIcons name="chevron-right" size={24} color={colors.textTertiary} />
-        </Pressable>
+          <View style={{ height: spacing.xxl }} />
+        </ScrollView>
       </View>
-
-      <View style={styles.footer}>
-        <Button title="Sign Out" onPress={handleSignOut} variant="outline" fullWidth />
-      </View>
-    </Screen>
+    </>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   header: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
-  avatarContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-    ...shadows.md,
-  },
-  name: {
+  headerTitle: {
     fontSize: typography.fontSize.xxl,
     fontWeight: typography.fontWeight.bold,
     color: colors.text,
-    marginBottom: spacing.xs,
   },
-  email: {
-    fontSize: typography.fontSize.base,
+  profileCard: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    padding: spacing.xl,
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    marginBottom: spacing.md,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.iconBg1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileName: {
+    fontSize: typography.fontSize.xl,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.text,
+    marginBottom: spacing.xs / 2,
+  },
+  profileEmail: {
+    fontSize: typography.fontSize.sm,
     color: colors.textSecondary,
+    marginBottom: spacing.md,
+  },
+  tierBadgeWrapper: {
+    marginTop: spacing.sm,
   },
   section: {
-    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.xl,
   },
   sectionTitle: {
-    fontSize: typography.fontSize.lg,
+    fontSize: typography.fontSize.base,
     fontWeight: typography.fontWeight.semibold,
     color: colors.text,
     marginBottom: spacing.md,
   },
-  card: {
+  infoCard: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    gap: spacing.md,
   },
-  row: {
+  infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.sm,
+  },
+  infoLabel: {
+    flex: 1,
+    fontSize: typography.fontSize.sm,
+    color: colors.textSecondary,
+  },
+  infoValue: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.text,
+  },
+  settingsCard: {
+    backgroundColor: colors.card,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+  },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+  },
+  settingPressed: {
+    opacity: 0.7,
+  },
+  settingInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
+  settingLabel: {
+    fontSize: typography.fontSize.base,
+    color: colors.text,
   },
   divider: {
     height: 1,
     backgroundColor: colors.divider,
-    marginVertical: spacing.md,
+    marginVertical: spacing.xs,
   },
-  label: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.textSecondary,
-  },
-  value: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
-  },
-  statusBadge: {
+  logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: borderRadius.full,
-  },
-  statusText: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.success,
-  },
-  actionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
+    justifyContent: 'center',
+    gap: spacing.sm,
     padding: spacing.md,
     backgroundColor: colors.card,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.sm,
-    ...shadows.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.error + '40',
   },
-  actionText: {
-    flex: 1,
+  logoutPressed: {
+    opacity: 0.7,
+  },
+  logoutText: {
     fontSize: typography.fontSize.base,
-    color: colors.text,
-  },
-  footer: {
-    marginTop: 'auto',
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  loadingText: {
-    fontSize: typography.fontSize.base,
-    color: colors.textSecondary,
-  },
-  emptyText: {
-    fontSize: typography.fontSize.lg,
     fontWeight: typography.fontWeight.semibold,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  emptySubtext: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textTertiary,
-    textAlign: 'center',
+    color: colors.error,
   },
 });
