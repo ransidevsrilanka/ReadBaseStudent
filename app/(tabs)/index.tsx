@@ -34,7 +34,7 @@ export default function DashboardScreen() {
   const { enrollment, userSubjects, profile, user } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [aiCredits, setAiCredits] = useState({ used: 0, limit: 100 });
+  const [aiCredits, setAiCredits] = useState({ used: 0, limit: 0 });
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
 
@@ -103,7 +103,7 @@ export default function DashboardScreen() {
   }
 
   const creditsRemaining = aiCredits.limit - aiCredits.used;
-  const creditsPercent = (creditsRemaining / aiCredits.limit) * 100;
+  const creditsPercent = aiCredits.limit > 0 ? (creditsRemaining / aiCredits.limit) * 100 : 0;
 
   return (
     <View style={[styles(colors).container, { paddingTop: insets.top }]}>
@@ -124,14 +124,14 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Balance Card (Subscription Info) */}
+        {/* Main Card - AI Credits Focus */}
         <LinearGradient
           colors={[colors.cardGradientStart, colors.cardGradientEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles(colors).balanceCard}
+          style={styles(colors).mainCard}
         >
-          <View style={styles(colors).balanceHeader}>
+          <View style={styles(colors).cardHeader}>
             <View style={styles(colors).tierBadgeContainer}>
               <TierBadge tier={enrollment.tier} size="small" />
               {enrollment.grade === 'al_combo' && (
@@ -146,23 +146,44 @@ export default function DashboardScreen() {
             </Pressable>
           </View>
 
-          <Text style={styles(colors).balanceLabel}>Subscription Status</Text>
-          <Text style={styles(colors).balanceValue}>
-            {enrollment.expires_at 
-              ? `Valid until ${new Date(enrollment.expires_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
-              : 'Lifetime Access'
-            }
+          <Text style={styles(colors).cardLabel}>AI Credits Available</Text>
+          <Text style={styles(colors).cardMainValue}>
+            {creditsRemaining.toLocaleString()}
+          </Text>
+          <Text style={styles(colors).cardSubValue}>
+            of {aiCredits.limit.toLocaleString()} credits
           </Text>
 
-          <View style={styles(colors).balanceActions}>
+          {/* Progress Bar */}
+          <View style={styles(colors).progressBarContainer}>
+            <View style={styles(colors).progressBarBg}>
+              <View style={[styles(colors).progressBarFill, { width: `${creditsPercent}%` }]} />
+            </View>
+          </View>
+
+          <View style={styles(colors).cardActions}>
+            <Pressable 
+              style={styles(colors).actionButton}
+              onPress={() => router.push('/(tabs)/ai-chat')}
+            >
+              <MaterialIcons name="auto-awesome" size={16} color="rgba(255,255,255,0.9)" />
+              <Text style={styles(colors).actionButtonText}>Use AI Tutor</Text>
+            </Pressable>
             <Pressable style={styles(colors).actionButton}>
-              <MaterialIcons name="credit-card" size={18} color="rgba(255,255,255,0.9)" />
+              <MaterialIcons name="arrow-upward" size={16} color="rgba(255,255,255,0.9)" />
               <Text style={styles(colors).actionButtonText}>Upgrade</Text>
             </Pressable>
-            <Pressable style={styles(colors).actionButton}>
-              <MaterialIcons name="auto-awesome" size={18} color="rgba(255,255,255,0.9)" />
-              <Text style={styles(colors).actionButtonText}>{creditsRemaining} Credits</Text>
-            </Pressable>
+          </View>
+
+          {/* Expiry Date - Small, Bottom Corner */}
+          <View style={styles(colors).expiryBadge}>
+            <MaterialIcons name="event" size={12} color="rgba(255,255,255,0.8)" />
+            <Text style={styles(colors).expiryText}>
+              {enrollment.expires_at 
+                ? `Valid until ${new Date(enrollment.expires_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`
+                : 'Lifetime Access'
+              }
+            </Text>
           </View>
         </LinearGradient>
 
@@ -175,13 +196,13 @@ export default function DashboardScreen() {
                 {GRADE_LABELS[enrollment.grade as keyof typeof GRADE_LABELS]}
               </Text>
               <Text style={styles(colors).infoSubtitle}>
-                {STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS]} · {MEDIUM_LABELS[enrollment.medium as keyof typeof MEDIUM_LABELS]}
+                {enrollment.stream ? `${STREAM_LABELS[enrollment.stream as keyof typeof STREAM_LABELS]} · ` : ''}{MEDIUM_LABELS[enrollment.medium as keyof typeof MEDIUM_LABELS]}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Quick Actions Grid */}
+        {/* Quick Actions Grid - Properly Aligned */}
         <View style={styles(colors).quickActionsSection}>
           <View style={styles(colors).quickActionsGrid}>
             {QUICK_ACTIONS.map(action => (
@@ -222,7 +243,7 @@ export default function DashboardScreen() {
             </View>
           ) : (
             <View style={styles(colors).subjectsList}>
-              {subjects.map((subject, index) => (
+              {subjects.map((subject) => (
                 <Pressable
                   key={subject.id}
                   style={({ pressed }) => [
@@ -290,14 +311,14 @@ const styles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  balanceCard: {
+  mainCard: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
     padding: spacing.lg,
     borderRadius: borderRadius.xl,
-    minHeight: 180,
+    position: 'relative',
   },
-  balanceHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
@@ -330,18 +351,38 @@ const styles = (colors: any) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  balanceLabel: {
+  cardLabel: {
     fontSize: typography.fontSize.sm,
     color: 'rgba(255, 255, 255, 0.7)',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.xs / 2,
   },
-  balanceValue: {
-    fontSize: typography.fontSize.xxl,
+  cardMainValue: {
+    fontSize: 36,
     fontWeight: typography.fontWeight.bold,
     color: '#FFFFFF',
-    marginBottom: spacing.lg,
+    letterSpacing: -0.5,
   },
-  balanceActions: {
+  cardSubValue: {
+    fontSize: typography.fontSize.sm,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: spacing.xs / 4,
+    marginBottom: spacing.md,
+  },
+  progressBarContainer: {
+    marginBottom: spacing.md,
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: borderRadius.full,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: borderRadius.full,
+  },
+  cardActions: {
     flexDirection: 'row',
     gap: spacing.sm,
   },
@@ -353,11 +394,29 @@ const styles = (colors: any) => StyleSheet.create({
     paddingVertical: spacing.sm,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: borderRadius.full,
+    flex: 1,
+    justifyContent: 'center',
   },
   actionButtonText: {
     fontSize: typography.fontSize.sm,
     fontWeight: typography.fontWeight.medium,
     color: 'rgba(255, 255, 255, 0.9)',
+  },
+  expiryBadge: {
+    position: 'absolute',
+    bottom: spacing.md,
+    right: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs / 2,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xs / 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: borderRadius.sm,
+  },
+  expiryText: {
+    fontSize: typography.fontSize.xs - 1,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   infoBanner: {
     marginHorizontal: spacing.lg,
@@ -393,10 +452,11 @@ const styles = (colors: any) => StyleSheet.create({
   quickActionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    justifyContent: 'space-between',
+    rowGap: spacing.md,
   },
   quickActionItem: {
-    width: '22%',
+    width: '30%',
     alignItems: 'center',
     gap: spacing.xs,
   },
