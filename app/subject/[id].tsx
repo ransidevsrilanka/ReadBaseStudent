@@ -72,10 +72,8 @@ export default function SubjectScreen() {
 
       setTopics(topicsWithNotes);
       
-      // Auto-expand first topic if it has notes
-      if (topicsWithNotes.length > 0 && topicsWithNotes[0].notes.length > 0) {
-        setExpandedTopics(new Set([topicsWithNotes[0].id]));
-      }
+      // All topics start collapsed by default
+      setExpandedTopics(new Set());
     } catch (error) {
       console.error('Error loading subject and topics:', error);
       setTopics([]);
