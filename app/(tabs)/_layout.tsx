@@ -10,18 +10,6 @@ export default function TabLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
-  if (loading) {
-    return null;
-  }
-
-  if (!user) {
-    return <Redirect href="/login" />;
-  }
-
-  if (sessionConflict) {
-    return <Redirect href="/session-conflict" />;
-  }
-
   const tabBarStyle = {
     height: Platform.select({
       ios: insets.bottom + 60,
@@ -39,6 +27,19 @@ export default function TabLayout() {
     borderTopWidth: 1,
     borderTopColor: colors.border,
   };
+
+  // Conditional rendering AFTER all hooks are called
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
+    return <Redirect href="/login" />;
+  }
+
+  if (sessionConflict) {
+    return <Redirect href="/session-conflict" />;
+  }
 
   return (
     <Tabs
