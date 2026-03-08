@@ -27,11 +27,12 @@ export const pdfService = {
   /**
    * Log PDF download attempt
    */
-  async logDownload(noteId: string) {
+  async logDownload(noteId: string, userId: string) {
     const { error } = await supabase
       .from('download_logs')
       .insert({
         note_id: noteId,
+        user_id: userId,
         downloaded_at: new Date().toISOString(),
       });
     

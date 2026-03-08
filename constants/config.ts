@@ -25,7 +25,7 @@ export const GRADE_LABELS = {
 
 export const STREAM_LABELS = {
   maths: 'Physical Science',
-  bio: 'Biological Science',
+  biology: 'Biological Science',
   commerce: 'Commerce',
   arts: 'Arts',
   technology: 'Technology',

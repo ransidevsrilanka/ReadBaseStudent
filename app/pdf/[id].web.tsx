@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Pressable, Platform } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { supabase } from '@/services/supabase';
 import { pdfService } from '@/services/pdf';
 import { useAlert } from '@/template';
 import { colors, spacing, typography } from '@/constants/theme';
@@ -56,7 +57,10 @@ export default function PDFViewerWebScreen() {
     if (signedUrl) {
       // Open in new tab for download
       window.open(signedUrl, '_blank');
-      await pdfService.logDownload(id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await pdfService.logDownload(id, user.id);
+      }
     }
   };
 

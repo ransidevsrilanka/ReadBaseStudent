@@ -35,18 +35,23 @@ export default function DashboardScreen() {
   const [aiCredits, setAiCredits] = useState({ used: 0, limit: 0 });
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loadingSubjects, setLoadingSubjects] = useState(true);
-
-  // Redirect non-Platinum users to upgrade page
-  if (enrollment && enrollment.tier !== 'lifetime') {
-    return <Redirect href="/upgrade" />;
-  }
+  const [shouldRedirectToUpgrade, setShouldRedirectToUpgrade] = useState(false);
 
   useEffect(() => {
+    if (enrollment && enrollment.tier !== 'lifetime') {
+      setShouldRedirectToUpgrade(true);
+      return;
+    }
     if (user && enrollment) {
       loadAICredits();
       loadSubjects();
     }
   }, [user, enrollment, userSubjects]);
+
+  // Redirect non-Platinum users (after all hooks are called)
+  if (shouldRedirectToUpgrade) {
+    return <Redirect href="/upgrade" />;
+  }
 
   const loadSubjects = async () => {
     if (!enrollment || !userSubjects) {

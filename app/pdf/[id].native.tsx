@@ -4,6 +4,7 @@ import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import Pdf from 'react-native-pdf';
 import * as ScreenCapture from 'expo-screen-capture';
+import { supabase } from '@/services/supabase';
 import { pdfService } from '@/services/pdf';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/template';
@@ -77,7 +78,10 @@ export default function PDFViewerScreen() {
     }
 
     try {
-      await pdfService.logDownload(id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await pdfService.logDownload(id, user.id);
+      }
       showAlert('Download Started', 'The PDF is being downloaded to your device.');
     } catch (err) {
       showAlert('Download Failed', 'Unable to download PDF at this time.');

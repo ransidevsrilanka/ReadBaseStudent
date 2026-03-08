@@ -2,16 +2,20 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
-import { colors, spacing, typography, borderRadius } from '@/constants/theme';
+import { useTheme } from '@/contexts/ThemeContext';
+import { spacing, typography, borderRadius } from '@/constants/theme';
 
 export default function SessionConflictScreen() {
   const { forceLogout } = useAuth();
+  const { colors } = useTheme();
   const router = useRouter();
 
   const handleLogout = async () => {
     await forceLogout();
     router.replace('/login');
   };
+
+  const styles = createStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -48,7 +52,7 @@ export default function SessionConflictScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
