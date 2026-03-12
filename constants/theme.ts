@@ -1,25 +1,25 @@
 export const colors = {
   // Primary Brand
-  primary: '#6B46C1',
-  primaryLight: '#9F7AEA',
-  primaryDark: '#553C9A',
+  primary: '#0ea5e9', // Cyan/Sky Blue
+  primaryLight: '#38bdf8',
+  primaryDark: '#0284c7',
   
   // Accent
-  accent: '#10B981', // Green accent like web app
+  accent: '#10B981', // Green accent
   accentLight: '#34D399',
   accentBlue: '#3B82F6',
   
   // Tier Colors
   silver: '#94A3B8',
   gold: '#F59E0B',
-  platinum: '#8B5CF6',
+  platinum: '#0ea5e9', // Match primary cyan
   
   // Dark Theme Backgrounds
-  background: '#0A0A0A', // Almost black
-  surface: '#141414', // Dark card background
-  surfaceLight: '#1A1A1A',
-  card: '#1A1A1A',
-  cardBorder: '#262626',
+  background: '#020617', // Deep blue-black
+  surface: '#0f172a', // Slightly lighter dark blue
+  surfaceLight: '#1e293b',
+  card: '#0f172a',
+  cardBorder: '#1e293b',
   
   // Text (Dark Theme)
   text: '#FFFFFF',
@@ -36,8 +36,13 @@ export const colors = {
   info: '#3B82F6',
   
   // Borders & Dividers
-  border: '#262626',
-  divider: '#1F1F1F',
+  border: '#1e293b',
+  divider: '#0f172a',
+  
+  // Icon backgrounds (for colored icon containers)
+  iconBg1: '#0ea5e915', // Cyan with 15% opacity
+  iconBg2: '#10B98115', // Green with 15% opacity
+  iconBg3: '#F59E0B15', // Gold with 15% opacity
   
   // Status
   active: '#10B981',
