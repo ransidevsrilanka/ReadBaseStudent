@@ -57,14 +57,14 @@ export default function LoginScreen() {
                 end={{ x: 1, y: 1 }}
                 style={styles.illustrationBg}
               >
-                <MaterialIcons name="school" size={80} color={colors.primary} />
+                <MaterialIcons name="security" size={80} color={colors.purple} />
               </LinearGradient>
             </View>
 
             <View style={styles.heroText}>
-              <Text style={styles.heroTitle}>Learn Smarter,{'\n'}Score Higher.</Text>
+              <Text style={styles.heroTitle}>The Vault{'\n'}Awaits You.</Text>
               <Text style={styles.heroSubtitle}>
-                Access your study materials anytime, anywhere with ReadBase Premium
+                Premium high-security access to your study materials
               </Text>
             </View>
           </View>
@@ -124,7 +124,7 @@ export default function LoginScreen() {
                 style={styles.gradientButton}
               >
                 <Text style={styles.loginButtonText}>
-                  {loading ? 'Logging in...' : 'Login'}
+                  {loading ? 'Accessing Vault...' : 'Enter Vault'}
                 </Text>
               </LinearGradient>
             </Pressable>
