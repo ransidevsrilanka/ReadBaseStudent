@@ -57,7 +57,7 @@ export default function LoginScreen() {
                 end={{ x: 1, y: 1 }}
                 style={styles.illustrationBg}
               >
-                <MaterialIcons name="security" size={80} color={colors.purple} />
+                <MaterialIcons name="security" size={80} color={colors.primary} />
               </LinearGradient>
             </View>
 
@@ -134,6 +134,7 @@ export default function LoginScreen() {
                 styles.secondaryButton,
                 pressed && styles.buttonPressed,
               ]}
+              onPress={() => router.push('/signup')}
             >
               <Text style={styles.secondaryButtonText}>Create Account</Text>
             </Pressable>

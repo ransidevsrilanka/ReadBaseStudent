@@ -5,26 +5,31 @@ export const colors = {
   surface: '#121210', // Vault-Surface — Elevated panels
   surfaceLight: '#1a1a18', // Lighter variant for hover states
   
-  // Premium Accents
-  gold: 'hsl(45, 93%, 47%)', // #EAB308 — Platinum/Premium UI
-  goldLight: 'hsl(45, 93%, 60%)',
-  goldDark: 'hsl(45, 93%, 35%)',
+  // Brand Identity
+  brandBlue: '#1da1f2', // Primary brand color
+  brandBlueLight: '#4ab3f4',
+  brandBlueDark: '#1a8cd8',
   
-  purple: 'hsl(262, 83%, 57%)', // #8B5CF6 — Standard branding
+  gold: '#f5c518', // Premium accent
+  goldLight: '#f7d458',
+  goldDark: '#d4a814',
+  
+  // Primary & Accent (Mapped for compatibility)
+  primary: '#1da1f2', // Brand Blue as default primary
+  primaryLight: '#4ab3f4',
+  primaryDark: '#1a8cd8',
+  
+  accent: '#f5c518', // Gold as accent
+  accentLight: '#f7d458',
+  
+  // Legacy purple (for backward compatibility)
+  purple: 'hsl(262, 83%, 57%)',
   purpleLight: 'hsl(262, 83%, 70%)',
   purpleDark: 'hsl(262, 83%, 45%)',
   
-  // Primary & Accent (Mapped for compatibility)
-  primary: 'hsl(262, 83%, 57%)', // Purple as default primary
-  primaryLight: 'hsl(262, 83%, 70%)',
-  primaryDark: 'hsl(262, 83%, 45%)',
-  
-  accent: 'hsl(45, 93%, 47%)', // Gold as accent
-  accentLight: 'hsl(45, 93%, 60%)',
-  
   // Tier Colors
   silver: '#94A3B8',
-  platinum: 'hsl(45, 93%, 47%)', // Gold for Platinum tier
+  platinum: '#f5c518', // Gold for Platinum tier
   
   // Semantic Colors
   success: 'hsl(142, 76%, 36%)', // #22C55E — Success/Glow
@@ -34,7 +39,7 @@ export const colors = {
   warningDark: '#C05621',
   error: '#EF4444',
   errorLight: '#FCA5A5',
-  info: 'hsl(262, 83%, 57%)', // Purple
+  info: '#1da1f2', // Brand Blue
   
   // Text Hierarchy
   text: '#ffffff', // Primary text
@@ -58,13 +63,13 @@ export const colors = {
   cardGlass: 'rgba(18, 18, 16, 0.7)', // Semi-transparent card with blur
   
   // Icon backgrounds (Glass effect)
-  iconBg1: 'rgba(139, 92, 246, 0.15)', // Purple with 15% opacity
+  iconBg1: 'rgba(29, 161, 242, 0.15)', // Brand Blue with 15% opacity
   iconBg2: 'rgba(34, 197, 94, 0.15)', // Success with 15% opacity
-  iconBg3: 'rgba(234, 179, 8, 0.15)', // Gold with 15% opacity
+  iconBg3: 'rgba(245, 197, 24, 0.15)', // Gold with 15% opacity
   
   // Glow Effects (for radial gradients)
-  glowPurple: 'rgba(139, 92, 246, 0.3)',
-  glowGold: 'rgba(234, 179, 8, 0.3)',
+  glowBlue: 'rgba(29, 161, 242, 0.3)',
+  glowGold: 'rgba(245, 197, 24, 0.3)',
   glowSuccess: 'rgba(34, 197, 94, 0.3)',
   
   // Status
@@ -162,14 +167,14 @@ export const shadows = {
   },
   glow: {
     // Glow effect for premium elements
-    shadowColor: 'hsl(45, 93%, 47%)', // Gold glow
+    shadowColor: '#f5c518', // Gold glow
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 10,
   },
-  glowPurple: {
-    shadowColor: 'hsl(262, 83%, 57%)', // Purple glow
+  glowBlue: {
+    shadowColor: '#1da1f2', // Brand Blue glow
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 20,

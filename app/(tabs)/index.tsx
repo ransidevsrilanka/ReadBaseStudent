@@ -19,12 +19,12 @@ interface Subject {
 }
 
 const QUICK_ACTIONS = [
-  { id: 'ai-chat', label: 'AI Tutor', icon: 'auto-awesome', route: '/(tabs)/ai-chat', color: '#8B5CF6' },
+  { id: 'ai-chat', label: 'AI Tutor', icon: 'auto-awesome', route: '/(tabs)/ai-chat', color: '#1da1f2' },
   { id: 'notes', label: 'My Notes', icon: 'description', route: null, color: '#3B82F6' },
-  { id: 'quizzes', label: 'Quizzes', icon: 'quiz', route: null, color: '#10B981' },
-  { id: 'flashcards', label: 'Flashcards', icon: 'style', route: null, color: '#F59E0B' },
+  { id: 'quizzes', label: 'Quizzes', icon: 'quiz', route: null, color: '#22C55E' },
+  { id: 'flashcards', label: 'Flashcards', icon: 'style', route: null, color: '#f5c518' },
   { id: 'print', label: 'Print Request', icon: 'print', route: '/print-request', color: '#EC4899' },
-  { id: 'progress', label: 'Progress', icon: 'insights', route: null, color: '#6366F1' },
+  { id: 'progress', label: 'Progress', icon: 'insights', route: null, color: '#8B5CF6' },
 ];
 
 export default function DashboardScreen() {
@@ -38,13 +38,17 @@ export default function DashboardScreen() {
   const [shouldRedirectToUpgrade, setShouldRedirectToUpgrade] = useState(false);
 
   useEffect(() => {
-    if (enrollment && enrollment.tier !== 'lifetime') {
-      setShouldRedirectToUpgrade(true);
-      return;
-    }
     if (user && enrollment) {
+      // Check if non-Platinum user
+      if (enrollment.tier !== 'lifetime') {
+        setShouldRedirectToUpgrade(true);
+        return;
+      }
       loadAICredits();
       loadSubjects();
+    } else if (user && !enrollment) {
+      // User logged in but no enrollment - redirect to pricing
+      router.replace('/pricing');
     }
   }, [user, enrollment, userSubjects]);
 
