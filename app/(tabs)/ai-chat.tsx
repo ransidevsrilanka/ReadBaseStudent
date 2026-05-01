@@ -6,7 +6,8 @@ import { Screen } from '@/components/layout/Screen';
 import { useAuth } from '@/hooks/useAuth';
 import { aiService } from '@/services/ai';
 import { useAlert } from '@/template';
-import { colors, spacing, typography, borderRadius, shadows } from '@/constants/theme';
+import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
+import { useTheme } from '@/contexts/ThemeContext';
 import { AI_CREDIT_LIMITS, COMBO_FIRST_MONTH_BONUS } from '@/constants/config';
 
 interface Message {
@@ -24,10 +25,13 @@ const QUICK_ACTIONS = [
 ];
 
 export default function AIChatScreen() {
+  const { colors } = useTheme();
   const { user, enrollment, userSubjects } = useAuth();
   const { showAlert } = useAlert();
   const insets = useSafeAreaInsets();
   const flatListRef = useRef<FlatList>(null);
+
+  const s = createStyles(colors);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
@@ -181,14 +185,13 @@ export default function AIChatScreen() {
 
   const renderMessage = ({ item }: { item: Message }) => {
     const isUser = item.role === 'user';
-    
     return (
-      <View style={[styles.messageContainer, isUser ? styles.userMessage : styles.assistantMessage]}>
-        <View style={[styles.messageBubble, isUser ? styles.userBubble : styles.assistantBubble]}>
-          <Text style={[styles.messageText, isUser ? styles.userText : styles.assistantText]}>
+      <View style={[s.messageContainer, isUser ? s.userMessage : s.assistantMessage]}>
+        <View style={[s.messageBubble, isUser ? s.userBubble : s.assistantBubble]}>
+          <Text style={[s.messageText, isUser ? s.userText : s.assistantText]}>
             {item.content}
           </Text>
-          <Text style={[styles.timestamp, isUser ? styles.userTimestamp : styles.assistantTimestamp]}>
+          <Text style={[s.timestamp, isUser ? s.userTimestamp : s.assistantTimestamp]}>
             {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </Text>
         </View>
@@ -199,9 +202,9 @@ export default function AIChatScreen() {
   if (!enrollment || !user) {
     return (
       <Screen>
-        <View style={styles.emptyState}>
+        <View style={s.emptyState}>
           <MaterialIcons name="smart-toy" size={64} color={colors.textTertiary} />
-          <Text style={styles.emptyText}>Please log in to use AI Tutor</Text>
+          <Text style={s.emptyText}>Please log in to use AI Tutor</Text>
         </View>
       </Screen>
     );
@@ -211,11 +214,11 @@ export default function AIChatScreen() {
   if (enrollment.tier === 'starter') {
     return (
       <Screen>
-        <View style={styles.emptyState}>
+        <View style={s.emptyState}>
           <MaterialIcons name="lock" size={64} color={colors.textTertiary} />
-          <Text style={styles.emptyText}>AI Access Unavailable</Text>
-          <Text style={styles.emptySubtext}>
-            AI Tutor is only available for Gold and Platinum members.{' \n'}
+          <Text style={s.emptyText}>AI Access Unavailable</Text>
+          <Text style={s.emptySubtext}>
+            AI Tutor is only available for Gold and Platinum members.{'\n'}
             Upgrade your subscription to access this feature.
           </Text>
         </View>
@@ -228,21 +231,21 @@ export default function AIChatScreen() {
   const isLowCredits = usagePercent >= 80;
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
+    <View style={[s.container, { paddingBottom: insets.bottom }]}>
       {/* Credits Bar */}
-      <View style={styles.creditsBar}>
-        <View style={styles.creditsInfo}>
+      <View style={s.creditsBar}>
+        <View style={s.creditsInfo}>
           <MaterialIcons name="bolt" size={20} color={isLowCredits ? colors.warning : colors.primary} />
-          <Text style={[styles.creditsText, isLowCredits && styles.creditsWarning]}>
+          <Text style={[s.creditsText, isLowCredits && s.creditsWarning]}>
             {creditsRemaining} / {creditsLimit} credits
           </Text>
         </View>
-        <View style={styles.progressBarBg}>
+        <View style={s.progressBarBg}>
           <View 
             style={[
-              styles.progressBarFill, 
+              s.progressBarFill, 
               { width: `${usagePercent}%` },
-              isLowCredits && styles.progressBarWarning
+              isLowCredits && s.progressBarWarning
             ]} 
           />
         </View>
@@ -250,28 +253,28 @@ export default function AIChatScreen() {
 
       {/* Messages List */}
       {loadingHistory ? (
-        <View style={styles.loadingContainer}>
+        <View style={s.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : messages.length === 0 ? (
-        <View style={styles.emptyState}>
+        <View style={s.emptyState}>
           <MaterialIcons name="chat" size={64} color={colors.textTertiary} />
-          <Text style={styles.emptyText}>Start a conversation</Text>
-          <Text style={styles.emptySubtext}>Ask me anything about your subjects!</Text>
+          <Text style={s.emptyText}>Start a conversation</Text>
+          <Text style={s.emptySubtext}>Ask me anything about your subjects!</Text>
           
           {/* Quick Actions */}
-          <View style={styles.quickActions}>
+          <View style={s.quickActions}>
             {QUICK_ACTIONS.map((action, index) => (
               <Pressable
                 key={index}
                 style={({ pressed }) => [
-                  styles.quickActionButton,
-                  pressed && styles.quickActionPressed,
+                  s.quickActionButton,
+                  pressed && s.quickActionPressed,
                 ]}
                 onPress={() => handleQuickAction(action.prompt)}
               >
                 <MaterialIcons name={action.icon as any} size={20} color={colors.primary} />
-                <Text style={styles.quickActionText}>{action.text}</Text>
+                <Text style={s.quickActionText}>{action.text}</Text>
               </Pressable>
             ))}
           </View>
@@ -282,7 +285,7 @@ export default function AIChatScreen() {
           data={messages}
           renderItem={renderMessage}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.messagesList}
+          contentContainerStyle={s.messagesList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
       )}
@@ -292,9 +295,9 @@ export default function AIChatScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <View style={styles.inputContainer}>
+        <View style={s.inputContainer}>
           <TextInput
-            style={styles.input}
+            style={s.input}
             placeholder="Ask a question..."
             placeholderTextColor={colors.textTertiary}
             value={inputText}
@@ -305,9 +308,9 @@ export default function AIChatScreen() {
           />
           <Pressable
             style={({ pressed }) => [
-              styles.sendButton,
-              pressed && styles.sendButtonPressed,
-              (!inputText.trim() || loading || creditsRemaining <= 0) && styles.sendButtonDisabled,
+              s.sendButton,
+              pressed && s.sendButtonPressed,
+              (!inputText.trim() || loading || creditsRemaining <= 0) && s.sendButtonDisabled,
             ]}
             onPress={handleSend}
             disabled={!inputText.trim() || loading || creditsRemaining <= 0}
@@ -324,7 +327,7 @@ export default function AIChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -351,7 +354,7 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 4,
-    backgroundColor: colors.divider,
+    backgroundColor: colors.border,
     borderRadius: borderRadius.full,
     overflow: 'hidden',
   },
@@ -448,7 +451,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   userTimestamp: {
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.6)',
   },
   assistantTimestamp: {
     color: colors.textTertiary,
@@ -481,7 +484,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   sendButtonPressed: {
     opacity: 0.8,

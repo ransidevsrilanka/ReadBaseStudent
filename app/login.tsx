@@ -129,15 +129,14 @@ export default function LoginScreen() {
               </LinearGradient>
             </Pressable>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={() => router.push('/signup')}
-            >
-              <Text style={styles.secondaryButtonText}>Create Account</Text>
-            </Pressable>
+            <View style={styles.signupNote}>
+              <Text style={styles.signupNoteText}>
+                Don't have an account?{' '}
+              </Text>
+              <Text style={styles.signupNoteLink}>
+                Visit notebase.tech to enroll.
+              </Text>
+            </View>
           </View>
 
           {/* Footer */}
@@ -186,11 +185,12 @@ const createStyles = (colors: any) => StyleSheet.create({
     gap: spacing.md,
   },
   heroTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: typography.fontWeight.bold,
     color: colors.text,
     textAlign: 'center',
-    lineHeight: 38,
+    lineHeight: 34,
+    letterSpacing: -0.5,
   },
   heroSubtitle: {
     fontSize: typography.fontSize.base,
@@ -238,19 +238,20 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     color: colors.textInverse,
   },
-  secondaryButton: {
-    height: 56,
-    alignItems: 'center',
+  signupNote: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
+    flexWrap: 'wrap',
+    paddingTop: spacing.sm,
   },
-  secondaryButtonText: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.text,
+  signupNoteText: {
+    fontSize: typography.fontSize.sm,
+    color: colors.textTertiary,
+  },
+  signupNoteLink: {
+    fontSize: typography.fontSize.sm,
+    color: colors.primary,
+    fontWeight: typography.fontWeight.medium,
   },
   buttonPressed: {
     opacity: 0.8,

@@ -1,6 +1,6 @@
 export const SUPABASE_CONFIG = {
-  url: 'https://csqqorcnrwkkwpfbravh.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzcXFvcmNucndra3dwZmJyYXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczMjUwODQsImV4cCI6MjA4MjkwMTA4NH0.0908kEp96dAM6trGwpmpVScJYBYdpegJ5ztLSB4Wj1E',
+  url: 'https://ommxomxhelkwslafjvnz.supabase.co',
+  anonKey: 'YOUR_ANON_KEY_HERE', // Retrieve from Supabase Dashboard → Settings → API
 };
 
 export const TIER_NAMES = {
