@@ -1,80 +1,78 @@
-// THE VAULT DESIGN SYSTEM — Premium Security Aesthetic
+// THE VAULT — "DEEP SPACE" DESIGN SYSTEM
+// Version 3.0 — Notebase LK Premium Study Companion
+
 export const colors = {
-  // Vault Core (Deep Space)
-  background: '#0a0a04', // Vault-Dark — Main background
-  surface: '#121210', // Vault-Surface — Elevated panels
-  surfaceLight: '#1a1a18', // Lighter variant for hover states
-  
-  // Brand Identity
-  brandBlue: '#1da1f2', // Primary brand color
-  brandBlueLight: '#4ab3f4',
-  brandBlueDark: '#1a8cd8',
-  
-  gold: '#f5c518', // Premium accent
-  goldLight: '#f7d458',
-  goldDark: '#d4a814',
-  
-  // Primary & Accent (Mapped for compatibility)
-  primary: '#1da1f2', // Brand Blue as default primary
-  primaryLight: '#4ab3f4',
-  primaryDark: '#1a8cd8',
-  
-  accent: '#f5c518', // Gold as accent
-  accentLight: '#f7d458',
-  
-  // Legacy purple (for backward compatibility)
+  // ─── Deep Space Core ───
+  background: '#080B14',   // Main background — deep space black
+  surface: '#0D1117',      // Elevated cards and panels
+  surface2: '#161B27',     // Secondary elevated elements
+
+  // ─── Borders ───
+  border: '#1F2937',        // Subtle card borders
+  borderActive: '#38BDF8',  // Active/selected border (brand)
+  divider: '#1F2937',
+
+  // ─── Brand ───
+  primary: '#38BDF8',       // Sky blue — primary accent
+  primaryLight: '#7DD3FC',  // Lighter blue for highlights and glows
+  primaryDark: '#0EA5E9',   // Darker blue for pressed states
+  brandBlue: '#38BDF8',
+  brandBright: '#7DD3FC',
+
+  // ─── Premium Accent (Gold for Platinum) ───
+  accent: '#F59E0B',        // Gold/amber for premium actions
+  accentLight: '#FCD34D',
+  accentDark: '#D97706',
+
+  // Legacy purple (kept for backward compat)
   purple: 'hsl(262, 83%, 57%)',
   purpleLight: 'hsl(262, 83%, 70%)',
   purpleDark: 'hsl(262, 83%, 45%)',
-  
-  // Tier Colors
+
+  // ─── Tier Colors ───
   silver: '#94A3B8',
-  platinum: '#f5c518', // Gold for Platinum tier
-  
-  // Semantic Colors
-  success: 'hsl(142, 76%, 36%)', // #22C55E — Success/Glow
-  successLight: 'hsl(142, 76%, 50%)',
-  warning: '#F59E0B',
-  warningLight: '#FED7AA',
-  warningDark: '#C05621',
-  error: '#EF4444',
+  gold: '#F59E0B',
+  platinum: '#7DD3FC',      // Brand bright for Platinum
+
+  // ─── Semantic ───
+  success: '#10B981',       // Green — pass, done, active
+  successLight: '#34D399',
+  warning: '#F59E0B',       // Amber — pending, low credits
+  warningLight: '#FCD34D',
+  error: '#EF4444',         // Red — fail, expired, blocked
   errorLight: '#FCA5A5',
-  info: '#1da1f2', // Brand Blue
-  
-  // Text Hierarchy
-  text: '#ffffff', // Primary text
-  textSecondary: '#a1a1aa', // Muted text (zinc-400)
-  textTertiary: '#71717a', // Subtle text (zinc-500)
-  textInverse: '#0a0a04', // Dark text on light backgrounds
-  
-  // Glassmorphism Support
-  glass: 'rgba(255, 255, 255, 0.05)', // Semi-transparent white
-  glassBorder: 'rgba(255, 255, 255, 0.1)', // 1px border for glass cards
-  glassHover: 'rgba(255, 255, 255, 0.08)',
-  
-  // Borders & Dividers
-  border: 'rgba(255, 255, 255, 0.1)',
-  borderSubtle: 'rgba(255, 255, 255, 0.05)',
-  divider: 'rgba(255, 255, 255, 0.08)',
-  
-  // Card Variants
-  card: '#121210', // Same as surface
-  cardBorder: 'rgba(255, 255, 255, 0.1)',
-  cardGlass: 'rgba(18, 18, 16, 0.7)', // Semi-transparent card with blur
-  
-  // Icon backgrounds (Glass effect)
-  iconBg1: 'rgba(29, 161, 242, 0.15)', // Brand Blue with 15% opacity
-  iconBg2: 'rgba(34, 197, 94, 0.15)', // Success with 15% opacity
-  iconBg3: 'rgba(245, 197, 24, 0.15)', // Gold with 15% opacity
-  
-  // Glow Effects (for radial gradients)
-  glowBlue: 'rgba(29, 161, 242, 0.3)',
-  glowGold: 'rgba(245, 197, 24, 0.3)',
-  glowSuccess: 'rgba(34, 197, 94, 0.3)',
-  
-  // Status
-  active: 'hsl(142, 76%, 36%)',
-  inactive: '#404040',
+  info: '#38BDF8',
+
+  // ─── Text Hierarchy ───
+  text: '#E2E8F0',          // High-contrast headings/labels
+  textSecondary: '#94A3B8', // Standard readable body text
+  textTertiary: '#64748B',  // Muted / disabled text
+  textInverse: '#080B14',   // Dark text on light backgrounds
+
+  // ─── Glassmorphism ───
+  glass: 'rgba(255, 255, 255, 0.04)',
+  glassBorder: 'rgba(255, 255, 255, 0.08)',
+  glassHover: 'rgba(255, 255, 255, 0.06)',
+  cardGlass: 'rgba(13, 17, 23, 0.7)',
+
+  // ─── Card ───
+  card: '#0D1117',
+  cardBorder: '#1F2937',
+
+  // ─── Icon Backgrounds (brand-tinted glass) ───
+  iconBg1: 'rgba(56, 189, 248, 0.12)',   // Brand blue tint
+  iconBg2: 'rgba(16, 185, 129, 0.12)',   // Success tint
+  iconBg3: 'rgba(245, 158, 11, 0.12)',   // Gold tint
+  iconBg4: 'rgba(239, 68, 68, 0.12)',    // Error tint
+
+  // ─── Glow Effects ───
+  glowBlue: 'rgba(56, 189, 248, 0.24)',    // Brand blue glow (blur 40-60px)
+  glowGold: 'rgba(245, 158, 11, 0.24)',
+  glowSuccess: 'rgba(16, 185, 129, 0.24)',
+
+  // ─── State Colors ───
+  active: '#10B981',
+  inactive: '#374151',
 };
 
 export const spacing = {
@@ -96,40 +94,39 @@ export const borderRadius = {
 
 export const typography = {
   fontFamily: {
-    // Headings: Plus Jakarta Sans (ExtraBold for premium feel)
-    heading: 'PlusJakartaSans-Bold', // Use Bold as closest to ExtraBold
-    headingRegular: 'PlusJakartaSans-Regular',
-    headingMedium: 'PlusJakartaSans-Medium',
-    headingSemibold: 'PlusJakartaSans-SemiBold',
-    headingBold: 'PlusJakartaSans-Bold',
-    
-    // Body: Inter (fallback to system for now, will load Inter fonts later)
-    body: 'System', // TODO: Load Inter font family
-    
-    // Math/Code: JetBrains Mono (fallback to monospace)
-    mono: 'Courier', // TODO: Load JetBrains Mono
-    
-    // Legacy support (map to Plus Jakarta Sans)
-    regular: 'PlusJakartaSans-Regular',
-    medium: 'PlusJakartaSans-Medium',
-    semibold: 'PlusJakartaSans-SemiBold',
-    bold: 'PlusJakartaSans-Bold',
+    // Headings: Space Grotesk (semibold/bold)
+    heading: 'SpaceGrotesk-Bold',
+    headingMedium: 'SpaceGrotesk-Medium',
+    headingSemibold: 'SpaceGrotesk-SemiBold',
+
+    // Body: Inter (regular/medium)
+    body: 'Inter-Regular',
+    bodyMedium: 'Inter-Medium',
+
+    // Monospace: JetBrains Mono (AI chat, code)
+    mono: 'Courier', // fallback until JetBrains Mono loaded
+
+    // Legacy support
+    regular: 'System',
+    medium: 'System',
+    semibold: 'System',
+    bold: 'System',
   },
   fontSize: {
-    xs: 11,
-    sm: 13,
-    base: 15,
-    lg: 17,
-    xl: 20,
-    xxl: 28,
-    xxxl: 36,
+    xs: 12,      // Caption
+    sm: 14,      // Secondary / body small
+    base: 16,    // Body
+    lg: 20,      // Section headings / card titles
+    xl: 24,      // Screen subtitles
+    xxl: 28,     // Screen titles
+    xxxl: 36,    // Hero / display
   },
   fontWeight: {
     regular: '400' as const,
     medium: '500' as const,
     semibold: '600' as const,
     bold: '700' as const,
-    extrabold: '800' as const, // For premium headings
+    extrabold: '800' as const,
   },
   lineHeight: {
     tight: 1.2,
@@ -137,9 +134,9 @@ export const typography = {
     relaxed: 1.75,
   },
   letterSpacing: {
-    tight: -0.02, // -0.02em for headings (Vault aesthetic)
+    tight: -0.5,   // Headings (-0.02em approx)
     normal: 0,
-    wide: 0.02,
+    wide: 0.5,
   },
 };
 
@@ -147,34 +144,33 @@ export const shadows = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
     elevation: 2,
   },
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
   lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 8,
   },
-  glow: {
-    // Glow effect for premium elements
-    shadowColor: '#f5c518', // Gold glow
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
   glowBlue: {
-    shadowColor: '#1da1f2', // Brand Blue glow
+    shadowColor: '#38BDF8',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  glowGold: {
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -182,17 +178,17 @@ export const shadows = {
   },
 };
 
-// Glassmorphism helper
+// Glassmorphism helper values
 export const glassmorphism = {
-  background: 'rgba(18, 18, 16, 0.7)', // Semi-transparent surface
+  backgroundColor: 'rgba(255, 255, 255, 0.04)',
   borderWidth: 1,
-  borderColor: 'rgba(255, 255, 255, 0.1)',
-  // Note: backdrop-filter blur not directly supported in RN, use BlurView component
+  borderColor: 'rgba(255, 255, 255, 0.08)',
+  // Use BlurView (expo-blur) with intensity={12} tint="dark" for backdrop blur
 };
 
-// Animation durations (for micro-animations)
+// Animation durations
 export const animations = {
-  fast: 200,
-  normal: 400, // Default for scale-in, slide-up
-  slow: 600,
+  fast: 100,
+  normal: 250,   // Entry animations
+  slow: 400,
 };
