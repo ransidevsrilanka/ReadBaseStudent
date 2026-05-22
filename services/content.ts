@@ -64,23 +64,14 @@ export const contentService = {
     console.log('contentService - Raw subjects found:', allSubjects.length);
 
     // Match subjects to requested codes with proper medium
-    // Use a Set to avoid duplicate subjects (e.g. combo grade returning same code twice)
-    const seen = new Set<string>();
     const matchedSubjects = subjectCodes
       .map(({ code, medium }) => {
         const targetMedium = medium || enrollmentMedium;
-        // Try exact medium match first, then fall back to any medium for this code
-        const match =
-          allSubjects.find(s => s.subject_code === code && s.medium === targetMedium) ??
-          allSubjects.find(s => s.subject_code === code);
-        return match;
+        return allSubjects.find(
+          s => s.subject_code === code && s.medium === targetMedium
+        );
       })
-      .filter((s): s is NonNullable<typeof s> => {
-        if (!s) return false;
-        if (seen.has(s.id)) return false;
-        seen.add(s.id);
-        return true;
-      });
+      .filter(Boolean);
 
     console.log('contentService - Matched subjects:', matchedSubjects.length);
     

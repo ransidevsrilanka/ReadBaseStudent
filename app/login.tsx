@@ -129,14 +129,15 @@ export default function LoginScreen() {
               </LinearGradient>
             </Pressable>
 
-            <View style={styles.signupNote}>
-              <Text style={styles.signupNoteText}>
-                Don't have an account?{' '}
-              </Text>
-              <Text style={styles.signupNoteLink}>
-                Visit notebase.tech to enroll.
-              </Text>
-            </View>
+            <Pressable
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={() => router.push('/signup')}
+            >
+              <Text style={styles.secondaryButtonText}>Create Account</Text>
+            </Pressable>
           </View>
 
           {/* Footer */}
@@ -185,12 +186,11 @@ const createStyles = (colors: any) => StyleSheet.create({
     gap: spacing.md,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: typography.fontWeight.bold,
     color: colors.text,
     textAlign: 'center',
-    lineHeight: 34,
-    letterSpacing: -0.5,
+    lineHeight: 38,
   },
   heroSubtitle: {
     fontSize: typography.fontSize.base,
@@ -238,20 +238,19 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     color: colors.textInverse,
   },
-  signupNote: {
-    flexDirection: 'row',
+  secondaryButton: {
+    height: 56,
+    alignItems: 'center',
     justifyContent: 'center',
-    flexWrap: 'wrap',
-    paddingTop: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  signupNoteText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.textTertiary,
-  },
-  signupNoteLink: {
-    fontSize: typography.fontSize.sm,
-    color: colors.primary,
-    fontWeight: typography.fontWeight.medium,
+  secondaryButtonText: {
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.text,
   },
   buttonPressed: {
     opacity: 0.8,

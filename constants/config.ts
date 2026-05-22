@@ -1,6 +1,6 @@
 export const SUPABASE_CONFIG = {
-  url: 'https://ommxomxhelkwslafjvnz.supabase.co',
-  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tbXhvbXhoZWxrd3NsYWZqdm56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDQ3NDksImV4cCI6MjA4OTkyMDc0OX0.F4uVtt5qO57_67HMCQhSnZKtwJ7bSZtBZvyAxxpRldY',
+  url: 'https://csqqorcnrwkkwpfbravh.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNzcXFvcmNucndra3dwZmJyYXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczMjUwODQsImV4cCI6MjA4MjkwMTA4NH0.0908kEp96dAM6trGwpmpVScJYBYdpegJ5ztLSB4Wj1E',
 };
 
 export const TIER_NAMES = {
