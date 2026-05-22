@@ -26,11 +26,22 @@ export const enrollmentService = {
   },
 
   async getUserProfile(userId: string) {
-    const { data, error } = await supabase
+    // Try 'user_id' first, fall back to 'id' (matches auth.users.id)
+    let { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .maybeSingle();
+
+    if ((error || !data)) {
+      const result = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+      data = result.data;
+      error = result.error;
+    }
     
     if (error) throw error;
     return data;

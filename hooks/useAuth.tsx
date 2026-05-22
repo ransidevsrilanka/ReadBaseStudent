@@ -6,11 +6,10 @@ import { supabase } from '@/services/supabase';
 import { SESSION_HEARTBEAT_INTERVAL } from '@/constants/config';
 import { AppState } from 'react-native';
 import type { User } from '@supabase/supabase-js';
-import type { Database } from '@/services/supabase';
 
-type Enrollment = Database['enrollments'];
-type Profile = Database['profiles'];
-type UserSubjects = Database['user_subjects'];
+type Enrollment = Record<string, any> | null;
+type Profile = Record<string, any> | null;
+type UserSubjects = Record<string, any> | null;
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
